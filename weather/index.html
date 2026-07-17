@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Smart Crop Recommendation System</title>
+<!-- Fonts -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;600;700&display=swap" rel="stylesheet">
+<!-- Font Awesome -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css">
+<link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+<div class="app-shell">
+
+
+    <!-- ===================== TOP BAR ========================-->
+    <header class="topbar">
+        <div class="topbar-brand">
+            <span class="brand-mark"><i class="fa-solid fa-seedling"></i></span>
+            <div class="brand-copy">
+                <h1 class="brand-title">Smart Crop Recommendation System</h1>
+                <p class="brand-subtitle">AI-powered crop recommendation using weather, soil nutrients and regional agricultural intelligence.</p>
+            </div>
+        </div>
+        <div class="topbar-meta">
+            <span class="topbar-pill"><i class="fa-solid fa-microchip"></i> ML Engine Online</span>
+        </div>
+    </header>
+
+
+
+    <!-- =========================== SEARCH BAR =============================== -->
+    <section class="search-panel">
+        <div class="search-bar">
+            <i class="fa-solid fa-magnifying-glass search-bar-icon"></i>
+            <input type="text" class="search-box" placeholder="Search a city or region, e.g. Hyderabad, IN">
+            <button class="location-btn" title="Use current location">
+                <i class="fas fa-location-crosshairs"></i>
+            </button>
+            <button class="search-btn">
+                <i class="fas fa-search"></i>
+                <span>Search</span>
+            </button>
+        </div>
+        <div class="recent-searches">
+            <span class="recent-label"><i class="fa-regular fa-clock"></i> Recent</span>
+            <div id="recentList" class="recent-list"></div>
+        </div>
+    </section>
+
+    <!-- Loading -->
+    <div class="loading hidden">
+        <div class="spinner"></div>
+        <p>Loading weather data…</p>
+    </div>
+
+    <!-- Error -->
+    <div class="error hidden">
+        <i class="fa-solid fa-circle-exclamation"></i>
+        <p>Unable to fetch weather. Try another location.</p>
+    </div>
+
+    <!-- ===================== MAIN DASHBOARD GRID ===================-->
+    <div class="weather-info">
+        <div class="dashboard-grid">
+
+            <!-- ============== LEFT COLUMN ============== -->
+            <div class="dashboard-col dashboard-col-left">
+
+                <!-- Region Card -->
+                <div class="region-card hidden panel" id="regionCard">
+                    <div class="panel-heading">
+                        <h3><i class="fa-solid fa-map-location-dot"></i> Current Region</h3>
+                    </div>
+                    <p id="regionLabel" class="region-label">--</p>
+                    <h4 class="common-crops-heading">Common crops in your region</h4>
+                    <div id="commonCropsBadges" class="badge-row"></div>
+                </div>
+
+                <!-- Weather Panel -->
+                <div class="panel weather-panel">
+                    <div class="panel-heading">
+                        <h3><i class="fa-solid fa-cloud-sun"></i> Weather Conditions</h3>
+                        <button id="unitBtn" class="unit-toggle">Switch to °F</button>
+                    </div>
+
+                    <div class="location">
+                        <h2 class="city">Delhi, IN</h2>
+                        <p class="date">Friday, 10 July 2026</p>
+                    </div>
+
+                    <div class="weather-main">
+                        <img id="weatherIcon" src="" alt="Weather Icon">
+                        <div class="temperature">
+                            <h1 class="temp">31°C</h1>
+                            <p class="weather">Clouds</p>
+                        </div>
+                    </div>
+
+                    <div class="details">
+                        <div class="card">
+                            <i class="fas fa-temperature-half"></i>
+                            <span>Feels Like</span>
+                            <p id="feelsLike">36°C</p>
+                        </div>
+                        <div class="card">
+                            <i class="fas fa-droplet"></i>
+                            <span>Humidity</span>
+                            <p id="humidity">61%</p>
+                        </div>
+                        <div class="card">
+                            <i class="fas fa-wind"></i>
+                            <span>Wind</span>
+                            <p id="wind">5 m/s</p>
+                        </div>
+                        <div class="card">
+                            <i class="fas fa-gauge-high"></i>
+                            <span>Pressure</span>
+                            <p id="pressure">1000 hPa</p>
+                        </div>
+                        <div class="card">
+                            <i class="fas fa-eye"></i>
+                            <span>Visibility</span>
+                            <p id="visibility">10 km</p>
+                        </div>
+                        <div class="card">
+                            <i class="fas fa-temperature-three-quarters"></i>
+                            <span>High / Low</span>
+                            <p id="highLow">31° / 29°</p>
+                        </div>
+                    </div>
+
+                    <div class="sun-card">
+                        <div class="sun-item">
+                            <span class="sun-icon">🌅</span>
+                            <div>
+                                <small>Sunrise</small>
+                                <p id="sunrise">05:30 AM</p>
+                            </div>
+                        </div>
+                        <div class="sun-item">
+                            <span class="sun-icon">🌇</span>
+                            <div>
+                                <small>Sunset</small>
+                                <p id="sunset">07:22 PM</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bottom">
+                        <p class="updated">Last updated <span id="updatedTime">--</span></p>
+                    </div>
+                </div>
+
+                <!-- Soil Input Panel -->
+                <div class="soil-section panel">
+                    <div class="panel-heading">
+                        <h3><i class="fa-solid fa-seedling"></i> Soil Information</h3>
+                    </div>
+                    <p class="soil-hint"><i class="fa-solid fa-circle-info"></i> Temperature, humidity and rainfall are read automatically from the weather panel — enter your soil test values below.</p>
+
+                    <div class="soil-inputs">
+
+                        <div class="soil-field">
+                            <label for="nitrogen">
+                                <span class="soil-field-name"><i class="fa-solid fa-vial"></i> Nitrogen (N)</span>
+                                <span class="soil-field-unit">kg/ha</span>
+                            </label>
+                            <input type="number" id="nitrogen" placeholder="e.g. 240" min="0" max="600">
+                            <span class="soil-field-range">Typical range: 20 – 600 (Soil Health Card: Low &lt;280, Medium 280–560, High &gt;560)</span>
+                        </div>
+
+                        <div class="soil-field">
+                            <label for="phosphorus">
+                                <span class="soil-field-name"><i class="fa-solid fa-vial"></i> Phosphorus (P)</span>
+                                <span class="soil-field-unit">kg/ha</span>
+                            </label>
+                            <input type="number" id="phosphorus" placeholder="e.g. 42" min="0" max="145">
+                            <span class="soil-field-range">Typical range: 0 – 145</span>
+                        </div>
+
+                        <div class="soil-field">
+                            <label for="potassium">
+                                <span class="soil-field-name"><i class="fa-solid fa-vial"></i> Potassium (K)</span>
+                                <span class="soil-field-unit">kg/ha</span>
+                            </label>
+                            <input type="number" id="potassium" placeholder="e.g. 140" min="0" max="550">
+                            <span class="soil-field-range">Typical range: 20 – 550 (Soil Health Card: Low &lt;108, Medium 108–280, High &gt;280)</span>
+                        </div>
+
+                        <div class="soil-field">
+                            <label for="ph">
+                                <span class="soil-field-name"><i class="fa-solid fa-flask-vial"></i> Soil pH</span>
+                                <span class="soil-field-unit">pH</span>
+                            </label>
+                            <input type="number" step="0.1" id="ph" placeholder="e.g. 6.5" min="0" max="14">
+                            <span class="soil-field-range">Typical range: 3.5 – 9.5</span>
+                        </div>
+
+                    </div>
+
+                    <p class="soil-footnote">Values usually come from a soil testing report. Out-of-range figures are still accepted, but double-check them — the model was trained mostly on realistic agricultural values.</p>
+
+                    <button id="recommendBtn" class="recommend-btn">
+                        <i class="fa-solid fa-wheat-awn"></i>
+                        Recommend Crop
+                    </button>
+                </div>
+
+            </div>
+
+            <!-- ============== RIGHT COLUMN ============== -->
+            <div class="dashboard-col dashboard-col-right">
+
+                <!-- Empty State -->
+                <div class="crop-empty-state">
+                    <i class="fa-solid fa-chart-line"></i>
+                    <h3>No prediction yet</h3>
+                    <p>Search a location and enter soil values to generate an AI-powered crop recommendation.</p>
+                </div>
+
+                <!-- Crop Loading -->
+                <div class="crop-loading hidden">
+                    <div class="spinner"></div>
+                    <p>Analyzing soil &amp; weather…</p>
+                </div>
+
+                <!-- Crop Error -->
+                <div class="crop-error hidden">
+                    <i class="fa-solid fa-circle-exclamation"></i>
+                    <p id="cropErrorMsg">Unable to get a recommendation.</p>
+                </div>
+
+                <!-- Crop Result -->
+                <div class="crop-result hidden">
+
+                    <!-- Prediction Hero -->
+                    <div class="prediction-hero">
+                        <div class="result-header">
+                            <img id="cropImage" src="" alt="" class="crop-image">
+                            <div class="result-title">
+                                <span class="section-eyebrow"><i class="fa-solid fa-robot"></i> Machine Learning Prediction</span>
+                                <h2 id="cropName">--</h2>
+                                <p id="cropScientificName" class="scientific-name"></p>
+                            </div>
+                        </div>
+
+                        <p id="cropDescription" class="crop-description"></p>
+
+                        <div class="result-stats">
+                            <div class="stat-box">
+                                <span>Confidence</span>
+                                <p id="confidenceValue">--</p>
+                                <div class="progress-track"><div class="progress-fill" id="confidenceBar"></div></div>
+                            </div>
+                            <div class="stat-box">
+                                <span>Suitability</span>
+                                <p id="suitabilityValue">--</p>
+                                <div class="progress-track"><div class="progress-fill" id="suitabilityBar"></div></div>
+                            </div>
+                            <div class="stat-box stat-box-plain">
+                                <span>Harvest Time</span>
+                                <p id="harvestTimeValue">--</p>
+                            </div>
+                            <div class="stat-box stat-box-plain">
+                                <span>Water Need</span>
+                                <p id="waterNeedValue">--</p>
+                            </div>
+                            <div class="stat-box stat-box-plain">
+                                <span>Predicted At</span>
+                                <p id="predictionTimeValue">--</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Secondary detail grid -->
+                    <div class="detail-grid">
+
+                        <!-- Current Weather Summary -->
+                        <div class="detail-card weather-summary">
+                            <h4><i class="fa-solid fa-cloud"></i> Current Conditions</h4>
+                            <ul id="weatherSummaryList" class="plain-list"></ul>
+                            <p id="summarySuitableFor" class="suitable-for-line"></p>
+                        </div>
+
+                        <!-- Weather Suitability breakdown -->
+                        <div class="detail-card suitability-breakdown">
+                            <h4><i class="fa-solid fa-gauge"></i> Weather Suitability</h4>
+                            <ul id="suitabilityList" class="plain-list"></ul>
+                        </div>
+
+                        <!-- Why This Crop -->
+                        <div class="detail-card why-crop">
+                            <h4 id="whyCropHeading"><i class="fa-solid fa-circle-question"></i> Why This Crop?</h4>
+                            <ul id="whyCropList" class="plain-list badge-list"></ul>
+                        </div>
+
+                        <!-- Suggestions -->
+                        <div class="detail-card suggestions-box">
+                            <h4><i class="fa-solid fa-lightbulb"></i> Suggestions</h4>
+                            <ul id="suggestionsList" class="plain-list"></ul>
+                        </div>
+
+                        <!-- Fertilizer tip -->
+                        <div class="detail-card fertilizer-tip">
+                            <h4><i class="fa-solid fa-flask"></i> Fertilizer Tip</h4>
+                            <p id="fertilizerTip"></p>
+                        </div>
+
+                        <!-- Top Predictions -->
+                        <div class="detail-card top-predictions hidden" id="topPredictionsSection">
+                            <h4><i class="fa-solid fa-list-ol"></i> Top Predictions</h4>
+                            <ol id="topPredictionsList"></ol>
+                        </div>
+
+                    </div>
+
+                    <!-- Overall Recommendations -->
+                    <div class="panel recommendation-section" id="recommendationSection">
+                        <div class="panel-heading">
+                            <h3><i class="fa-solid fa-ranking-star"></i> Overall Recommendations</h3>
+                        </div>
+                        <p id="recommendationWeightsLine" class="recommendation-subtext"></p>
+                        <ol id="recommendationsList" class="recommendation-list"></ol>
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+    </div>
+
+    <!-- ===================== PREDICTION HISTORY =====================-->
+    <section class="panel history-panel">
+        <div class="panel-heading history-heading">
+            <h3><i class="fa-solid fa-clock-rotate-left"></i> Prediction History</h3>
+            <div class="history-actions">
+                <button id="historyExportBtn" class="history-btn"><i class="fa-solid fa-file-export"></i> Export CSV</button>
+                <button id="historyClearBtn" class="history-btn history-btn-danger"><i class="fa-solid fa-trash"></i> Clear All</button>
+            </div>
+        </div>
+
+        <div class="history-toolbar">
+            <div class="history-search">
+                <i class="fa-solid fa-magnifying-glass"></i>
+                <input type="text" id="historySearchInput" placeholder="Search by crop or location">
+            </div>
+            <select id="historyFilterSelect">
+                <option value="">All crops</option>
+            </select>
+            <select id="historySortSelect">
+                <option value="newest">Newest first</option>
+                <option value="oldest">Oldest first</option>
+                <option value="confidence">Highest confidence</option>
+            </select>
+        </div>
+
+        <div class="history-table-wrap">
+            <table class="history-table">
+                <thead>
+                    <tr>
+                        <th>Date &amp; Time</th>
+                        <th>Location</th>
+                        <th>Crop</th>
+                        <th>Confidence</th>
+                        <th>Suitability</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody id="historyTableBody"></tbody>
+            </table>
+            <p class="history-empty hidden" id="historyEmptyMsg">No predictions yet. Your prediction history will appear here.</p>
+        </div>
+
+        <div class="history-pagination" id="historyPagination"></div>
+    </section>
+
+</div>
+
+<script src="main.js"></script>
+</body>
+</html>

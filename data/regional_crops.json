@@ -1,0 +1,134 @@
+{
+  "_meta": {
+    "description": "Regional crop popularity database. Lookup order used by recommendation_engine.py: country -> state -> district. Each level may define a '_common' list, which is the fallback used whenever a more specific level (e.g. an unlisted district) is not found. This file is read-only application data - it is never touched by the ML model or the training pipeline.",
+    "fallback_key": "_common"
+  },
+
+  "India": {
+    "_common": ["Rice", "Wheat", "Maize", "Cotton", "Sugarcane", "Pulses"],
+
+    "Telangana": {
+      "_common": ["Rice", "Cotton", "Maize", "Redgram"],
+      "Hyderabad": ["Rice", "Cotton", "Maize"],
+      "Warangal": ["Rice", "Maize", "Cotton", "Chilli"],
+      "Nizamabad": ["Rice", "Maize", "Sugarcane", "Turmeric"],
+      "Karimnagar": ["Rice", "Maize", "Cotton", "Blackgram"],
+      "Khammam": ["Rice", "Cotton", "Chilli", "Maize"]
+    },
+
+    "Andhra Pradesh": {
+      "_common": ["Rice", "Cotton", "Chilli", "Maize"],
+      "West Godavari": ["Rice", "Maize", "Blackgram", "Sugarcane"],
+      "East Godavari": ["Rice", "Sugarcane", "Coconut", "Blackgram"],
+      "Guntur": ["Chilli", "Cotton", "Maize"],
+      "Krishna": ["Rice", "Sugarcane", "Blackgram", "Maize"],
+      "Chittoor": ["Mango", "Groundnut", "Rice", "Sugarcane"],
+      "Kurnool": ["Cotton", "Chilli", "Sunflower", "Maize"]
+    },
+
+    "Tamil Nadu": {
+      "_common": ["Rice", "Sugarcane", "Cotton", "Groundnut"],
+      "Thanjavur": ["Rice", "Sugarcane", "Blackgram", "Banana"],
+      "Coimbatore": ["Cotton", "Sugarcane", "Coconut", "Maize"],
+      "Madurai": ["Rice", "Cotton", "Chilli", "Pulses"],
+      "Salem": ["Sugarcane", "Cotton", "Mango", "Maize"]
+    },
+
+    "Karnataka": {
+      "_common": ["Rice", "Maize", "Cotton", "Sugarcane"],
+      "Mysuru": ["Rice", "Sugarcane", "Maize", "Cotton"],
+      "Belagavi": ["Sugarcane", "Cotton", "Maize", "Jute"],
+      "Ballari": ["Cotton", "Maize", "Sunflower", "Rice"],
+      "Mandya": ["Sugarcane", "Rice", "Coconut", "Maize"]
+    },
+
+    "Maharashtra": {
+      "_common": ["Cotton", "Sugarcane", "Jowar", "Maize"],
+      "Nagpur": ["Cotton", "Orange", "Maize", "Pigeonpeas"],
+      "Pune": ["Sugarcane", "Grapes", "Maize", "Cotton"],
+      "Nashik": ["Grapes", "Onion", "Maize", "Cotton"],
+      "Kolhapur": ["Sugarcane", "Rice", "Maize", "Cotton"]
+    },
+
+    "Punjab": {
+      "_common": ["Wheat", "Rice", "Maize", "Cotton"],
+      "Ludhiana": ["Wheat", "Rice", "Maize", "Cotton"],
+      "Amritsar": ["Wheat", "Rice", "Maize", "Sugarcane"],
+      "Patiala": ["Wheat", "Rice", "Cotton", "Maize"]
+    },
+
+    "Uttar Pradesh": {
+      "_common": ["Wheat", "Rice", "Sugarcane", "Maize"],
+      "Lucknow": ["Wheat", "Rice", "Maize", "Mango"],
+      "Meerut": ["Sugarcane", "Wheat", "Rice", "Maize"],
+      "Varanasi": ["Rice", "Wheat", "Pulses", "Maize"]
+    },
+
+    "West Bengal": {
+      "_common": ["Rice", "Jute", "Maize", "Potato"],
+      "Kolkata": ["Rice", "Jute", "Maize", "Coconut"],
+      "Bardhaman": ["Rice", "Jute", "Wheat", "Maize"],
+      "Murshidabad": ["Rice", "Jute", "Mango", "Maize"]
+    },
+
+    "Gujarat": {
+      "_common": ["Cotton", "Groundnut", "Maize", "Wheat"],
+      "Ahmedabad": ["Cotton", "Wheat", "Maize", "Groundnut"],
+      "Surat": ["Sugarcane", "Cotton", "Rice", "Banana"],
+      "Rajkot": ["Groundnut", "Cotton", "Wheat", "Maize"]
+    },
+
+    "Madhya Pradesh": {
+      "_common": ["Wheat", "Soybean", "Maize", "Cotton"],
+      "Indore": ["Soybean", "Wheat", "Maize", "Cotton"],
+      "Bhopal": ["Wheat", "Soybean", "Maize", "Chickpea"],
+      "Jabalpur": ["Wheat", "Rice", "Maize", "Chickpea"]
+    },
+
+    "Bihar": {
+      "_common": ["Rice", "Wheat", "Maize", "Pulses"],
+      "Patna": ["Rice", "Wheat", "Maize", "Pulses"],
+      "Gaya": ["Rice", "Wheat", "Maize", "Chickpea"]
+    },
+
+    "Rajasthan": {
+      "_common": ["Wheat", "Maize", "Cotton", "Mustard"],
+      "Jaipur": ["Wheat", "Mustard", "Maize", "Cotton"],
+      "Kota": ["Wheat", "Maize", "Cotton", "Chickpea"],
+      "Jodhpur": ["Mustard", "Wheat", "Cotton", "Maize"]
+    },
+
+    "Kerala": {
+      "_common": ["Coconut", "Rice", "Banana", "Rubber"],
+      "Kochi": ["Coconut", "Rice", "Banana", "Papaya"],
+      "Thiruvananthapuram": ["Coconut", "Banana", "Rice", "Mango"],
+      "Kozhikode": ["Coconut", "Rice", "Banana", "Papaya"]
+    },
+
+    "Haryana": {
+      "_common": ["Wheat", "Rice", "Cotton", "Maize"],
+      "Karnal": ["Wheat", "Rice", "Maize", "Sugarcane"],
+      "Hisar": ["Wheat", "Cotton", "Maize", "Mustard"]
+    },
+
+    "Odisha": {
+      "_common": ["Rice", "Maize", "Jute", "Blackgram"],
+      "Bhubaneswar": ["Rice", "Maize", "Blackgram", "Coconut"],
+      "Cuttack": ["Rice", "Jute", "Maize", "Blackgram"]
+    }
+  },
+
+  "United States": {
+    "_common": ["Maize", "Cotton", "Wheat", "Soybean"],
+    "Iowa": {
+      "_common": ["Maize", "Soybean"]
+    },
+    "California": {
+      "_common": ["Grapes", "Orange", "Cotton", "Rice"]
+    }
+  },
+
+  "_default": {
+    "_common": ["Rice", "Maize", "Wheat", "Cotton", "Pulses"]
+  }
+}

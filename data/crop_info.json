@@ -1,0 +1,486 @@
+{
+  "rice": {
+    "name": "Rice",
+    "scientific_name": "Oryza sativa",
+    "growing_season": "Kharif (Monsoon)",
+    "harvest_time": "120-150 days",
+    "water_requirement": "High",
+    "soil_type": "Clay Loam",
+    "ideal_temperature": [
+      20,
+      35
+    ],
+    "ideal_humidity": [
+      70,
+      90
+    ],
+    "ideal_rainfall": [
+      150,
+      300
+    ],
+    "fertilizer_tips": "Apply nitrogen in split doses; use phosphorus at transplanting for strong root growth.",
+    "description": "A staple cereal crop that thrives in warm, humid conditions with standing water."
+  },
+  "maize": {
+    "name": "Maize",
+    "scientific_name": "Zea mays",
+    "growing_season": "Kharif / Rabi",
+    "harvest_time": "90-120 days",
+    "water_requirement": "Medium",
+    "soil_type": "Well-drained Loamy",
+    "ideal_temperature": [
+      18,
+      32
+    ],
+    "ideal_humidity": [
+      50,
+      80
+    ],
+    "ideal_rainfall": [
+      60,
+      150
+    ],
+    "fertilizer_tips": "Needs high nitrogen; apply in split doses during vegetative and tasseling stages.",
+    "description": "A versatile cereal grown widely for food, feed, and industrial use."
+  },
+  "chickpea": {
+    "name": "Chickpea",
+    "scientific_name": "Cicer arietinum",
+    "growing_season": "Rabi (Winter)",
+    "harvest_time": "90-120 days",
+    "water_requirement": "Low",
+    "soil_type": "Sandy Loam",
+    "ideal_temperature": [
+      10,
+      25
+    ],
+    "ideal_humidity": [
+      30,
+      60
+    ],
+    "ideal_rainfall": [
+      40,
+      100
+    ],
+    "fertilizer_tips": "Being a legume, it fixes its own nitrogen - focus on phosphorus and potassium instead.",
+    "description": "A cool-season legume valued for its protein-rich seeds, grown mostly in dry conditions."
+  },
+  "kidneybeans": {
+    "name": "Kidney Beans",
+    "scientific_name": "Phaseolus vulgaris",
+    "growing_season": "Rabi / Summer",
+    "harvest_time": "90-110 days",
+    "water_requirement": "Medium",
+    "soil_type": "Well-drained Loamy",
+    "ideal_temperature": [
+      15,
+      25
+    ],
+    "ideal_humidity": [
+      60,
+      85
+    ],
+    "ideal_rainfall": [
+      60,
+      120
+    ],
+    "fertilizer_tips": "Low nitrogen need (legume); ensure adequate phosphorus and potassium.",
+    "description": "A cool-climate legume grown for its distinctive kidney-shaped seeds."
+  },
+  "pigeonpeas": {
+    "name": "Pigeon Peas",
+    "scientific_name": "Cajanus cajan",
+    "growing_season": "Kharif",
+    "harvest_time": "150-180 days",
+    "water_requirement": "Low",
+    "soil_type": "Sandy Loam",
+    "ideal_temperature": [
+      20,
+      35
+    ],
+    "ideal_humidity": [
+      40,
+      70
+    ],
+    "ideal_rainfall": [
+      60,
+      150
+    ],
+    "fertilizer_tips": "Nitrogen-fixing legume - starter dose of nitrogen plus adequate phosphorus is enough.",
+    "description": "A hardy, drought-tolerant legume widely grown for its protein-rich split peas (dal)."
+  },
+  "mothbeans": {
+    "name": "Moth Beans",
+    "scientific_name": "Vigna aconitifolia",
+    "growing_season": "Kharif",
+    "harvest_time": "70-90 days",
+    "water_requirement": "Low",
+    "soil_type": "Sandy",
+    "ideal_temperature": [
+      25,
+      38
+    ],
+    "ideal_humidity": [
+      30,
+      60
+    ],
+    "ideal_rainfall": [
+      30,
+      90
+    ],
+    "fertilizer_tips": "Extremely drought-tolerant legume; minimal fertilizer needed beyond phosphorus.",
+    "description": "A highly drought-resistant legume suited to arid and semi-arid regions."
+  },
+  "mungbean": {
+    "name": "Mung Bean",
+    "scientific_name": "Vigna radiata",
+    "growing_season": "Kharif / Summer",
+    "harvest_time": "60-90 days",
+    "water_requirement": "Low",
+    "soil_type": "Sandy Loam",
+    "ideal_temperature": [
+      25,
+      35
+    ],
+    "ideal_humidity": [
+      50,
+      80
+    ],
+    "ideal_rainfall": [
+      60,
+      120
+    ],
+    "fertilizer_tips": "Legume with low nitrogen needs; apply phosphorus and potassium at sowing.",
+    "description": "A fast-maturing legume popular for its small green seeds, used widely in South Asian cuisine."
+  },
+  "blackgram": {
+    "name": "Black Gram",
+    "scientific_name": "Vigna mungo",
+    "growing_season": "Kharif / Rabi",
+    "harvest_time": "70-90 days",
+    "water_requirement": "Low",
+    "soil_type": "Clay Loam",
+    "ideal_temperature": [
+      25,
+      35
+    ],
+    "ideal_humidity": [
+      60,
+      85
+    ],
+    "ideal_rainfall": [
+      60,
+      150
+    ],
+    "fertilizer_tips": "Legume - starter nitrogen dose plus phosphorus supports early growth.",
+    "description": "A short-duration legume grown for its dark, protein-rich lentils (urad dal)."
+  },
+  "lentil": {
+    "name": "Lentil",
+    "scientific_name": "Lens culinaris",
+    "growing_season": "Rabi (Winter)",
+    "harvest_time": "100-130 days",
+    "water_requirement": "Low",
+    "soil_type": "Sandy Loam",
+    "ideal_temperature": [
+      10,
+      25
+    ],
+    "ideal_humidity": [
+      40,
+      70
+    ],
+    "ideal_rainfall": [
+      40,
+      100
+    ],
+    "fertilizer_tips": "Nitrogen-fixing legume; prioritize phosphorus for root and pod development.",
+    "description": "A cool-season legume grown for its small lens-shaped, protein-rich seeds."
+  },
+  "pomegranate": {
+    "name": "Pomegranate",
+    "scientific_name": "Punica granatum",
+    "growing_season": "Year-round (Perennial)",
+    "harvest_time": "5-7 months after flowering",
+    "water_requirement": "Low",
+    "soil_type": "Loamy",
+    "ideal_temperature": [
+      20,
+      35
+    ],
+    "ideal_humidity": [
+      35,
+      60
+    ],
+    "ideal_rainfall": [
+      50,
+      120
+    ],
+    "fertilizer_tips": "Balanced NPK feeding, with extra potassium during fruit development for better yield.",
+    "description": "A drought-tolerant fruit shrub prized for its juicy, antioxidant-rich seeds (arils)."
+  },
+  "banana": {
+    "name": "Banana",
+    "scientific_name": "Musa spp.",
+    "growing_season": "Year-round (Perennial)",
+    "harvest_time": "10-12 months",
+    "water_requirement": "High",
+    "soil_type": "Rich Loamy",
+    "ideal_temperature": [
+      22,
+      35
+    ],
+    "ideal_humidity": [
+      75,
+      95
+    ],
+    "ideal_rainfall": [
+      150,
+      300
+    ],
+    "fertilizer_tips": "Heavy feeder - needs high potassium and nitrogen throughout its growth cycle.",
+    "description": "A fast-growing tropical fruit crop that needs consistent warmth, humidity, and water."
+  },
+  "mango": {
+    "name": "Mango",
+    "scientific_name": "Mangifera indica",
+    "growing_season": "Year-round (Perennial)",
+    "harvest_time": "100-150 days after flowering",
+    "water_requirement": "Medium",
+    "soil_type": "Well-drained Loamy",
+    "ideal_temperature": [
+      24,
+      35
+    ],
+    "ideal_humidity": [
+      50,
+      80
+    ],
+    "ideal_rainfall": [
+      75,
+      200
+    ],
+    "fertilizer_tips": "Balanced NPK in early growth; increase potassium during flowering and fruit set.",
+    "description": "A tropical fruit tree valued worldwide for its sweet fruit, needing a distinct dry flowering period."
+  },
+  "grapes": {
+    "name": "Grapes",
+    "scientific_name": "Vitis vinifera",
+    "growing_season": "Year-round (Perennial)",
+    "harvest_time": "5-6 months after pruning",
+    "water_requirement": "Medium",
+    "soil_type": "Sandy Loam",
+    "ideal_temperature": [
+      15,
+      35
+    ],
+    "ideal_humidity": [
+      40,
+      70
+    ],
+    "ideal_rainfall": [
+      50,
+      120
+    ],
+    "fertilizer_tips": "Moderate nitrogen with higher potassium during fruit ripening for better sugar content.",
+    "description": "A woody vine fruit crop that prefers dry, sunny conditions with controlled irrigation."
+  },
+  "watermelon": {
+    "name": "Watermelon",
+    "scientific_name": "Citrullus lanatus",
+    "growing_season": "Summer / Kharif",
+    "harvest_time": "80-100 days",
+    "water_requirement": "Medium",
+    "soil_type": "Sandy Loam",
+    "ideal_temperature": [
+      24,
+      35
+    ],
+    "ideal_humidity": [
+      50,
+      75
+    ],
+    "ideal_rainfall": [
+      40,
+      100
+    ],
+    "fertilizer_tips": "High potassium during fruiting improves sweetness; avoid excess nitrogen late in the season.",
+    "description": "A warm-season vine crop grown for its large, sweet, water-rich fruit."
+  },
+  "muskmelon": {
+    "name": "Muskmelon",
+    "scientific_name": "Cucumis melo",
+    "growing_season": "Summer / Kharif",
+    "harvest_time": "80-100 days",
+    "water_requirement": "Medium",
+    "soil_type": "Sandy Loam",
+    "ideal_temperature": [
+      24,
+      35
+    ],
+    "ideal_humidity": [
+      45,
+      70
+    ],
+    "ideal_rainfall": [
+      40,
+      100
+    ],
+    "fertilizer_tips": "Balanced NPK early on; boost potassium as fruits develop for better flavor.",
+    "description": "A warm-season melon crop similar to watermelon, needing dry weather during fruit maturation."
+  },
+  "apple": {
+    "name": "Apple",
+    "scientific_name": "Malus domestica",
+    "growing_season": "Temperate (Spring bloom)",
+    "harvest_time": "150-180 days after flowering",
+    "water_requirement": "Medium",
+    "soil_type": "Well-drained Loamy",
+    "ideal_temperature": [
+      10,
+      24
+    ],
+    "ideal_humidity": [
+      50,
+      75
+    ],
+    "ideal_rainfall": [
+      100,
+      200
+    ],
+    "fertilizer_tips": "Balanced NPK with emphasis on potassium for fruit quality; needs cold winters to set fruit.",
+    "description": "A temperate fruit tree that requires a distinct cold dormancy period to flower and fruit well."
+  },
+  "orange": {
+    "name": "Orange",
+    "scientific_name": "Citrus sinensis",
+    "growing_season": "Year-round (Perennial)",
+    "harvest_time": "7-12 months after flowering",
+    "water_requirement": "Medium",
+    "soil_type": "Well-drained Loamy",
+    "ideal_temperature": [
+      15,
+      30
+    ],
+    "ideal_humidity": [
+      50,
+      75
+    ],
+    "ideal_rainfall": [
+      100,
+      200
+    ],
+    "fertilizer_tips": "Balanced NPK with micronutrients (zinc, iron); avoid waterlogging around roots.",
+    "description": "A subtropical citrus tree that prefers warm days, cool nights, and moderate rainfall."
+  },
+  "papaya": {
+    "name": "Papaya",
+    "scientific_name": "Carica papaya",
+    "growing_season": "Year-round (Perennial)",
+    "harvest_time": "8-10 months",
+    "water_requirement": "Medium",
+    "soil_type": "Well-drained Loamy",
+    "ideal_temperature": [
+      22,
+      35
+    ],
+    "ideal_humidity": [
+      60,
+      85
+    ],
+    "ideal_rainfall": [
+      100,
+      200
+    ],
+    "fertilizer_tips": "Frequent, moderate doses of balanced NPK support its fast, continuous growth.",
+    "description": "A fast-growing tropical fruit tree that produces fruit year-round in warm climates."
+  },
+  "coconut": {
+    "name": "Coconut",
+    "scientific_name": "Cocos nucifera",
+    "growing_season": "Year-round (Perennial)",
+    "harvest_time": "10-12 months per bunch",
+    "water_requirement": "High",
+    "soil_type": "Sandy Coastal",
+    "ideal_temperature": [
+      25,
+      35
+    ],
+    "ideal_humidity": [
+      70,
+      95
+    ],
+    "ideal_rainfall": [
+      150,
+      300
+    ],
+    "fertilizer_tips": "Needs regular potassium and chlorine (common in coastal soils) for healthy nut development.",
+    "description": "A tropical palm best suited to humid coastal regions with consistent warmth and rainfall."
+  },
+  "cotton": {
+    "name": "Cotton",
+    "scientific_name": "Gossypium spp.",
+    "growing_season": "Kharif",
+    "harvest_time": "150-180 days",
+    "water_requirement": "Medium",
+    "soil_type": "Black Cotton Soil",
+    "ideal_temperature": [
+      21,
+      35
+    ],
+    "ideal_humidity": [
+      50,
+      80
+    ],
+    "ideal_rainfall": [
+      60,
+      150
+    ],
+    "fertilizer_tips": "High nitrogen demand during vegetative growth; potassium is key for fiber quality.",
+    "description": "A major fiber crop that needs a long, warm frost-free growing period."
+  },
+  "jute": {
+    "name": "Jute",
+    "scientific_name": "Corchorus spp.",
+    "growing_season": "Kharif (Monsoon)",
+    "harvest_time": "120-150 days",
+    "water_requirement": "High",
+    "soil_type": "Alluvial",
+    "ideal_temperature": [
+      24,
+      37
+    ],
+    "ideal_humidity": [
+      70,
+      90
+    ],
+    "ideal_rainfall": [
+      150,
+      300
+    ],
+    "fertilizer_tips": "Moderate nitrogen supports fiber growth; avoid excess to prevent lodging.",
+    "description": "A fiber crop that thrives in hot, humid conditions with plentiful monsoon rainfall."
+  },
+  "coffee": {
+    "name": "Coffee",
+    "scientific_name": "Coffea spp.",
+    "growing_season": "Year-round (Perennial)",
+    "harvest_time": "7-9 months after flowering",
+    "water_requirement": "Medium",
+    "soil_type": "Well-drained Loamy (Highland)",
+    "ideal_temperature": [
+      15,
+      28
+    ],
+    "ideal_humidity": [
+      60,
+      85
+    ],
+    "ideal_rainfall": [
+      150,
+      250
+    ],
+    "fertilizer_tips": "Balanced NPK with organic matter; shade-grown coffee also benefits from nitrogen-fixing cover crops.",
+    "description": "A shade-loving shrub grown at higher elevations, valued worldwide for its beans."
+  }
+}
