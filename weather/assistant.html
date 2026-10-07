@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Agriculture Assistant</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="app-shell">
+
+    <header class="topbar">
+        <div class="topbar-brand">
+            <span class="brand-mark"><i class="fa-solid fa-book-open"></i></span>
+            <div class="brand-copy">
+                <h1 class="brand-title">Agriculture Assistant</h1>
+                <p class="brand-subtitle">Answers come only from the agricultural documents indexed on the server, with sources. It is independent of the crop recommender.</p>
+            </div>
+        </div>
+        <div class="topbar-meta">
+            <a class="topbar-pill" href="index.html" style="text-decoration:none"><i class="fa-solid fa-seedling"></i> Crop Recommendation</a>
+        </div>
+    </header>
+
+    <div class="panel chat-panel">
+        <p id="chatStatus" class="chat-status">Checking knowledge base…</p>
+        <div id="chatLog" class="chat-log" aria-live="polite"></div>
+        <form id="chatForm" class="chat-form">
+            <input id="chatInput" type="text" maxlength="1000" autocomplete="off"
+                   placeholder="Ask about crops, soil, irrigation, pests… (answers are limited to the indexed documents)">
+            <button id="chatSend" type="submit" class="search-btn"><i class="fas fa-paper-plane"></i><span>Ask</span></button>
+        </form>
+    </div>
+
+</div>
+<script src="assistant.js"></script>
+</body>
+</html>

@@ -340,3 +340,21 @@ Known limitations: weather already feeds suitability, so risk partly overlaps wi
 `explain.py` uses SHAP (`TreeExplainer`) on the Random Forest to explain each prediction. For the ML-predicted crop (and the top-ranked crop, if different) `/predict` returns `explanations[crop_key]`: per-feature `contribution` in percentage points of the model's probability (base rate + contributions = model probability), sorted by influence. If SHAP is unavailable it falls back to the model's global feature importance (`method: "feature_importance"`). The frontend shows the bars under the recommended-crop card.
 
 Honesty note (also returned in the response): this shows how the trained model weighs the inputs for one prediction. It is not causal proof that those factors drive real crop success, and inputs that move together in the training data share credit. Tests: `tests/test_explain.py`.
+
+## Phase 13 summary - agricultural RAG assistant (independent of the crop ML model)
+
+```
+PDFs (rag/documents/) -> pypdf text per page -> sentence-packed chunks (~900 chars, overlap, never spanning pages)
+  -> local embeddings (fastembed, BAAI/bge-small-en-v1.5, ONNX, no PyTorch) -> vector store (rag/index/: vectors.npy + chunks.json + manifest.json)
+Question -> embed -> top-5 cosine matches -> drop chunks below RAG_MIN_SCORE -> LLM (Anthropic) sees ONLY those numbered passages
+  -> answer with [n] citations + the documents/pages cited + the retrieved passages (with scores)
+```
+
+- **Grounding:** if no chunk is relevant enough, the API says the documents don't contain enough information *without calling the LLM*; the LLM is also told to answer `INSUFFICIENT_CONTEXT` if the passages don't cover the question, and to ignore any instructions inside passages.
+- **Vector store:** a NumPy matrix with exact cosine search (vectors are pre-normalised). It is the simplest dependable option at this scale (a few thousand chunks) and adds no database dependency; `rag/store.py` is the only file to change if you move to Chroma/FAISS.
+- **Metadata:** each chunk keeps document filename, PDF title, page number, chunk id; the manifest keeps SHA-256, page/chunk counts, ingest time and the embedding model. Re-running ingest only re-embeds new/changed PDFs and drops deleted ones.
+- **Keys:** `ANTHROPIC_API_KEY` (and optional `RAG_LLM_MODEL`) are read from `.env` only. Without a key, `/ask` returns 503 plus the retrieved passages.
+- **No documents are bundled.** Add authoritative PDFs (ICAR/SAU package of practices, FAO, government advisories) to `rag/documents/`. Scanned PDFs (no text layer) are skipped - OCR is not supported.
+- **Tuning:** `RAG_MIN_SCORE` (default 0.45) is a similarity floor that depends on the embedding model; check it against your own documents. The assistant is single-turn (no chat memory).
+
+Endpoints: `POST /api/agriculture/ask` `{"question": "..."}` -> `{success, question, answer, answerable, sources[{document,title,page,passage}], retrieved_context[{document,page,score,excerpt,used_in_answer,...}]}`; `GET /api/agriculture/status`. UI: `weather/assistant.html` (linked from the top bar). Tests: `tests/test_rag.py` (uses a hashing embedder and stub LLM so it runs offline).

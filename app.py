@@ -71,6 +71,10 @@ else:
 
 app = Flask(__name__)
 
+# Agricultural RAG assistant (independent of the crop ML model; lazy-loads on first request).
+from rag.api import bp as agriculture_rag_bp
+app.register_blueprint(agriculture_rag_bp)
+
 
 def get_top_predictions(input_scaled, top_n=3):
     if not hasattr(model, "predict_proba"):

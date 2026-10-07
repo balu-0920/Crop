@@ -8,3 +8,6 @@ xgboost
 matplotlib
 python-dotenv
 shap
+pypdf
+fastembed
+anthropic
