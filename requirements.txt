@@ -7,3 +7,4 @@ requests
 xgboost
 matplotlib
 python-dotenv
+shap

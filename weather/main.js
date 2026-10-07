@@ -847,6 +847,7 @@ function showCropResult(data){
 
     // --- Overall Recommendations (Part 3 - Smart Recommendation Engine) ---
     renderRecommendations(data.recommendations, data.recommendation_weights, data.decision_weights);
+    renderExplanation(data);
 
     // --- Prediction History (frontend-only, see saveHistoryEntry below) ---
     saveHistoryEntry(data, displayName);
@@ -857,6 +858,44 @@ function showCropResult(data){
 // gets a star rating (overall_score converted to 1-5 stars) plus its own
 // ✔/⚠/✖ "Why Recommended" badges - no separate lookup needed, the backend
 // already attached the explanation to each entry.
+// Explainable AI: bars showing how much each input moved the model's
+// probability for the recommended crop (SHAP). Not a causal claim - the
+// note from the backend is always shown with it.
+function renderExplanation(data){
+    const card = document.getElementById("explainCard");
+    const explanations = data.explanations || {};
+    const topCrop = data.recommendations?.[0]?.crop_key;
+    const key = explanations[topCrop] ? topCrop : data.prediction;
+    const ex = explanations[key];
+    if(!ex){ card.classList.add("hidden"); return; }
+
+    const isShap = ex.method === "shap";
+    const maxAbs = Math.max(...ex.features.map(f => Math.abs(f.contribution)), 1e-9);
+    const rows = ex.features.map(f => {
+        const width = Math.max(2, Math.round(Math.abs(f.contribution) / maxAbs * 100));
+        const cls = !isShap ? "explain-bar-neutral" : f.contribution >= 0 ? "explain-bar-up" : "explain-bar-down";
+        const sign = isShap && f.contribution > 0 ? "+" : "";
+        const val = isShap ? `${sign}${f.contribution.toFixed(1)} pts` : `${f.contribution.toFixed(1)}%`;
+        return `<div class="explain-row">
+            <span class="explain-name">${f.label}<small>${f.value ?? ""}</small></span>
+            <span class="explain-track"><span class="explain-bar ${cls}" style="width:${width}%"></span></span>
+            <span class="explain-num">${val}</span>
+        </div>`;
+    }).join("");
+
+    const cropName = data.crop_info && key === data.prediction ? data.crop_info.name : (data.recommendations?.find(r => r.crop_key === key)?.crop || key);
+    const probLine = isShap
+        ? `Model probability for ${cropName}: ${ex.model_probability}% (base rate ${ex.base_value}% + the contributions below)`
+        : "Model-wide feature importance (not specific to this input)";
+
+    card.innerHTML = `
+        <div class="explain-head"><strong>Why the model favours ${cropName}</strong></div>
+        <p class="explain-sub">${probLine}</p>
+        ${rows}
+        <p class="decision-note">${ex.note}</p>`;
+    card.classList.remove("hidden");
+}
+
 // Formats one decision field that the backend marks as available or unavailable.
 // Unavailable fields are shown explicitly (never as 0 or a guess).
 function decisionField(field, formatter){

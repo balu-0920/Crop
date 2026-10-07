@@ -334,3 +334,9 @@ Known limitations: weather already feeds suitability, so risk partly overlaps wi
 ### Tests
 
 `python -m unittest discover -s tests -v` (22 tests; CSV fixtures are test-only placeholders written to a temp dir).
+
+## Phase 12 summary - explainable AI
+
+`explain.py` uses SHAP (`TreeExplainer`) on the Random Forest to explain each prediction. For the ML-predicted crop (and the top-ranked crop, if different) `/predict` returns `explanations[crop_key]`: per-feature `contribution` in percentage points of the model's probability (base rate + contributions = model probability), sorted by influence. If SHAP is unavailable it falls back to the model's global feature importance (`method: "feature_importance"`). The frontend shows the bars under the recommended-crop card.
+
+Honesty note (also returned in the response): this shows how the trained model weighs the inputs for one prediction. It is not causal proof that those factors drive real crop success, and inputs that move together in the training data share credit. Tests: `tests/test_explain.py`.

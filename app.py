@@ -18,6 +18,7 @@ from geocoding import reverse_geocode
 from recommendation_engine import get_regional_context, build_recommendations
 from regional_data import store as regional_store
 from decision import apply_decision_layer, DECISION_WEIGHTS
+from explain import explain_prediction
 from economics import data_status as economics_data_status
 
 
@@ -303,9 +304,24 @@ def predict():
         debug_log("Ranked recommendations", recommendations)
 
        
+        # --- Explainable AI: why the model favours the predicted crop (and the
+        # top-ranked crop, if different). Failure here must never break /predict.
+        explanations = {}
+        try:
+            crops_to_explain = [predicted_crop]
+            if recommendations and recommendations[0]["crop_key"] != predicted_crop:
+                crops_to_explain.append(recommendations[0]["crop_key"])
+            explanations = explain_prediction(
+                model, label_encoder, feature_names,
+                {f: data[f] for f in feature_names}, input_scaled, crops_to_explain,
+            )
+        except Exception as exc:
+            debug_log("Explanation failed", repr(exc))
+
         return jsonify({
             "success": True,
             "prediction": predicted_crop,
+            "explanations": explanations,  # {crop_key: {method, base_value, features[...], note}}
             "confidence": confidence,
             "top_predictions": top_predictions,
             "crop_info": crop_details,

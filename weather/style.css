@@ -1063,3 +1063,27 @@ input{ font-family:inherit; }
 .risk-medium{ background:var(--color-accent-light); color:#B45309; }
 .risk-high{ background:var(--color-danger-light); color:var(--color-danger); }
 .risk-unknown{ background:var(--color-surface-alt); color:var(--color-text-muted); }
+
+
+/* =========================================================
+   EXPLAINABLE AI (feature contribution bars)
+========================================================= */
+.explain-card{
+    background:var(--color-surface-alt);
+    border:1px solid var(--color-border);
+    border-radius:var(--radius-md);
+    padding:var(--space-4);
+    margin-bottom:var(--space-4);
+}
+.explain-head{ font-size:14px; color:var(--color-text); margin-bottom:2px; }
+.explain-sub{ font-size:12px; color:var(--color-text-muted); margin-bottom:var(--space-3); }
+.explain-row{ display:grid; grid-template-columns:130px 1fr 70px; align-items:center; gap:10px; margin-bottom:6px; font-size:12.5px; }
+.explain-name{ font-weight:600; color:var(--color-text); }
+.explain-name small{ margin-left:6px; font-weight:400; color:var(--color-text-faint); }
+.explain-track{ background:var(--color-border); border-radius:999px; height:8px; overflow:hidden; }
+.explain-bar{ display:block; height:100%; border-radius:999px; }
+.explain-bar-up{ background:var(--color-secondary); }
+.explain-bar-down{ background:var(--color-danger); }
+.explain-bar-neutral{ background:var(--color-primary); }
+.explain-num{ font-family:var(--font-mono); text-align:right; color:var(--color-text-muted); }
+@media (max-width:520px){ .explain-row{ grid-template-columns:100px 1fr 62px; } }
