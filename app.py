@@ -17,6 +17,8 @@ from scoring_utils import analyze_suitability
 from geocoding import reverse_geocode
 from recommendation_engine import get_regional_context, build_recommendations
 from regional_data import store as regional_store
+from decision import apply_decision_layer, DECISION_WEIGHTS
+from economics import data_status as economics_data_status
 
 
 MODEL_PATH = os.path.join("models", "crop_model.pkl")
@@ -155,6 +157,13 @@ def home():
     return "Crop Recommendation backend is running."
 
 
+@app.route("/data_status")
+def data_status():
+    """Which economics inputs are loaded (prices / costs / yields) vs unavailable."""
+    return jsonify({"success": True, "economics": economics_data_status(),
+                    "regional_dataset": regional_store.info(), "decision_weights": DECISION_WEIGHTS})
+
+
 @app.route("/region", methods=["POST"])
 def region():
     data = request.get_json(silent=True) or {}
@@ -286,6 +295,11 @@ def predict():
             other_season_crops=context["other_season_crops"],
             regional_soil=context["soil"],
         )
+        # Profitability + risk layer: re-ranks by the documented final score (decision.py).
+        recommendations, _ = apply_decision_layer(
+            recommendations, crop_info, weather, state=state, district=district,
+            seasonal_climate=context["seasonal_climate"],
+        )
         debug_log("Ranked recommendations", recommendations)
 
        
@@ -309,6 +323,7 @@ def predict():
             # --- Smart Recommendation Engine (Part 3) ---
             "recommendations": recommendations,
             "recommendation_weights": weights_used,
+            "decision_weights": DECISION_WEIGHTS,
 
             # --- Regional data pipeline connection ---
             "regional_data": {

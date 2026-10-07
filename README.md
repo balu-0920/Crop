@@ -276,3 +276,61 @@ Copy `.env.example` to `.env` (git-ignored). Optional keys: `NOMINATIM_USER_AGEN
 ### Files changed
 
 New: `regional_data.py`, `soil_fit.py`, `tests/test_regional_data.py`, `.env.example`. Modified: `recommendation_engine.py`, `app.py`, `geocoding.py`, `requirements.txt`, `.gitignore`, `README.md`.
+
+## Phase 11 summary - profitability and risk decision layer
+
+### What data exists (audit result)
+
+| Needed | In the project? | Status |
+|---|---|---|
+| Crop price | No | **Unavailable** - add `data/economics/market_prices.csv` |
+| Cultivation cost | No | **Unavailable** - add `data/economics/cultivation_costs.csv` |
+| Expected yield | No (no yield labels anywhere; no yield model) | **Unavailable** - add `data/economics/historical_yields.csv` |
+| Regional production | Only via the pipeline, not yet generated | Used as crop lists when present (Phase 10) |
+| Weather risk | Yes - current temperature, humidity, 24h rain vs crop ideal ranges | **Available** |
+
+The three economics CSVs ship as header-only templates (`data/economics/README.md` has the columns, units and suggested public sources). Nothing is pre-filled: no price, cost or yield in this project is invented. Until you add real rows, yield / revenue / profit are returned as `{"available": false, "reason": ...}` and shown as "Unavailable" in the UI. `GET /data_status` shows what is loaded.
+
+### Formulas
+
+```
+Revenue (INR/ha) = expected yield (t/ha) x price (INR/quintal) x 10
+Profit  (INR/ha) = revenue - cultivation cost (INR/ha)
+```
+Expected yield = median of the latest 5 years of `historical_yields.csv` at the most specific level (district, then state, then national); range = 10th-90th percentile (min-max if < 5 values). Price/cost use the newest row (district -> state -> national); prices older than 1 year are flagged `stale`. Ranges cover yield variability only - price volatility is not modelled.
+
+**Risk score (0-100, `risk.py`)** - weighted mean of the components that can be measured:
+
+| Component | Weight | Definition |
+|---|---|---|
+| Temperature stress | 0.35 | `min(100, 100 x distance outside the crop's ideal range / range width)` for today's temperature (heat or cold) |
+| Rainfall stress | 0.40 | same formula for rain: excess (waterlogging) or deficit (drought indicator) |
+| Rainfall variability | 0.25 | district's year-to-year CV% of seasonal rainfall x 2, capped at 100; only with >= 5 years from the regional pipeline |
+
+Levels: < 20 Low, < 45 Medium, else High. Components without data are dropped and the weights re-normalised. **Unavailable and reported as such:** a multi-week drought index (needs rainfall history) and forecast uncertainty (the weather input has no spread). Temperature and rain are a snapshot of current conditions, not a season outlook.
+
+**Final ranking score (`decision.py`)** - every component is 0-100, higher is better:
+
+```
+final = sum(w_i x component_i) / sum(w_i)    over the components that are available
+
+suitability  w=0.45   existing recommendation score (ML + regional + weather + soil)
+yield        w=0.15   expected yield / best yield ever recorded for that crop in historical_yields.csv
+profit       w=0.25   profit / highest profit among the candidates (a loss scores 0)
+safety       w=0.15   100 - risk score
+```
+These weights are a documented judgement call, **not fitted to outcome data**: suitability is the only component backed by a trained model; profit outweighs yield because it already contains yield; risk is a moderate modifier. Edit `DECISION_WEIGHTS` (`decision.py`) and `RISK_WEIGHTS` (`risk.py`). With no economics data, `final = 0.75 x suitability + 0.25 x (100 - risk)`; the response lists `components_used` and `components_unavailable` for every crop.
+
+Known limitations: weather already feeds suitability, so risk partly overlaps with it (risk measures severity outside the ideal range, suitability measures overall fit); a crop with economics data and one without are scored on different component sets, so fill the data for all candidate crops to compare fairly; profit is an estimate from historical figures, not a forecast of farm results.
+
+### API
+
+`POST /predict` -> each item in `recommendations` now has a `decision` object: `final_score`, `suitability_pct`, `expected_yield`, `market_price`, `cultivation_cost`, `revenue`, `profit`, `risk {score, level, components, drivers, unavailable}`, `components`, `components_used`, `components_unavailable`, `main_reasons`. The list is sorted by `final_score`; top-level `decision_weights` is returned too. `GET /data_status` reports economics/regional data availability.
+
+### Frontend
+
+`weather/index.html`, `main.js`, `style.css`: a "Recommended crop" card (suitability, expected yield, revenue, profit, risk level, final score, main reasons) above the existing ranked list; unavailable fields are shown as "Unavailable" with the reason on hover. Each list row also shows a risk badge.
+
+### Tests
+
+`python -m unittest discover -s tests -v` (22 tests; CSV fixtures are test-only placeholders written to a temp dir).

@@ -197,7 +197,11 @@ class RegionalDataStore:
                     "humidity_pct": _num(pd.to_numeric(sg["avg_humidity_pct"], errors="coerce").mean()),
                     "rainfall_mm_season_total": _num(pd.to_numeric(sg["seasonal_rainfall_mm"], errors="coerce").mean()),
                     "years_of_data": int(sg["seasonal_rainfall_mm"].notna().sum()),
+                    "rainfall_cv_pct": None,
                 }
+                rain = pd.to_numeric(sg["seasonal_rainfall_mm"], errors="coerce").dropna()
+                if len(rain) >= 5 and rain.mean() > 0:  # year-to-year variability needs several years
+                    climate["rainfall_cv_pct"] = round(float(rain.std(ddof=1) / rain.mean() * 100), 1)
                 if climate["years_of_data"] == 0 and climate["temperature_c"] is None:
                     climate = None
                 seasons[season] = {"crops": crops, "climate": climate}

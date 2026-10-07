@@ -1036,3 +1036,30 @@ input{ font-family:inherit; }
     .brand-subtitle{ display:none; }
     .search-panel{ padding:var(--space-4); }
 }
+
+
+/* =========================================================
+   DECISION CARD (yield / revenue / profit / risk)
+========================================================= */
+.decision-card{
+    background:var(--color-primary-light);
+    border:1px solid var(--color-border-strong);
+    border-radius:var(--radius-md);
+    padding:var(--space-4);
+    margin-bottom:var(--space-4);
+}
+.decision-head{ display:flex; align-items:baseline; gap:var(--space-3); flex-wrap:wrap; margin-bottom:var(--space-3); }
+.decision-label{ font-size:12px; font-weight:600; color:var(--color-text-muted); text-transform:uppercase; letter-spacing:.04em; }
+.decision-crop{ font-size:20px; font-weight:700; color:var(--color-text); }
+.decision-grid{ display:grid; grid-template-columns:repeat(auto-fit,minmax(170px,1fr)); gap:var(--space-3); margin-bottom:var(--space-3); }
+.decision-key{ display:block; font-size:11.5px; color:var(--color-text-muted); margin-bottom:2px; }
+.decision-val{ font-weight:700; font-size:14.5px; color:var(--color-text); }
+.decision-val small{ font-weight:500; color:var(--color-text-muted); font-size:11.5px; }
+.decision-unavailable{ font-weight:600; color:var(--color-text-faint); font-style:italic; cursor:help; }
+.decision-reasons{ margin:0 0 var(--space-3) 18px; font-size:13px; color:var(--color-text); }
+.decision-note{ font-size:11.5px; color:var(--color-text-faint); font-family:var(--font-mono); line-height:1.5; }
+.risk-pill{ font-size:11.5px; font-weight:700; padding:3px 9px; border-radius:999px; }
+.risk-low{ background:var(--color-secondary-light); color:var(--color-secondary); }
+.risk-medium{ background:var(--color-accent-light); color:#B45309; }
+.risk-high{ background:var(--color-danger-light); color:var(--color-danger); }
+.risk-unknown{ background:var(--color-surface-alt); color:var(--color-text-muted); }
