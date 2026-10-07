@@ -15,19 +15,66 @@
 # clicking "Get Recommendation" after already loading the weather for
 # that city, should not trigger a second network call.
 
+import json
+import os
+import threading
+import time
+
 import requests
 
 NOMINATIM_URL = "https://nominatim.openstreetmap.org/reverse"
 
 # Nominatim's usage policy requires a real identifying User-Agent - requests
 # sent with the default python-requests header are frequently blocked.
-HEADERS = {"User-Agent": "CropRecommendationApp/1.0 (educational project)"}
+# Set NOMINATIM_USER_AGENT in .env to include your own contact (recommended).
+HEADERS = {"User-Agent": os.environ.get(
+    "NOMINATIM_USER_AGENT", "CropRecommendationApp/1.0 (educational project)")}
+
+# Persistent cache: successful lookups are saved to disk so restarting the
+# server (or searching the same place next week) never re-calls Nominatim.
+# Failures are NOT saved - they're only remembered briefly in memory so a
+# temporary outage doesn't stick around.
+CACHE_PATH = os.path.join(os.environ.get("CACHE_DIR", "cache"), "geocode_cache.json")
+CACHE_TTL_SECONDS = 30 * 24 * 3600
+FAILURE_RETRY_SECONDS = 300
+MIN_REQUEST_INTERVAL = 1.1  # Nominatim policy: max ~1 request/second
+
+_cache_lock = threading.Lock()
+_last_request_time = 0.0
+_failures = {}  # cache_key -> time of last failure
 
 # Simple in-memory cache: {"lat,lon": {"country": ..., "state": ..., "district": ...}}
 # Coordinates are rounded to 2 decimal places (~1km) before use as a cache
 # key, since two nearby requests for "the same city" rarely land on the
 # exact same float.
 _geocode_cache = {}
+
+
+def _load_disk_cache():
+    try:
+        with open(CACHE_PATH, encoding="utf-8") as fh:
+            entries = json.load(fh)
+        now = time.time()
+        for key, entry in entries.items():
+            if now - entry.get("saved_at", 0) < CACHE_TTL_SECONDS:
+                _geocode_cache[key] = entry["result"]
+    except (OSError, ValueError, AttributeError):
+        pass  # no cache yet / unreadable cache -> start empty
+
+
+def _save_disk_cache():
+    try:
+        os.makedirs(os.path.dirname(CACHE_PATH), exist_ok=True)
+        now = time.time()
+        tmp = CACHE_PATH + ".tmp"
+        with open(tmp, "w", encoding="utf-8") as fh:
+            json.dump({k: {"saved_at": now, "result": v} for k, v in _geocode_cache.items()}, fh)
+        os.replace(tmp, CACHE_PATH)
+    except OSError:
+        pass  # read-only disk etc. - caching is an optimisation only
+
+
+_load_disk_cache()
 
 # Some Nominatim address fields are more granular than others depending on
 # the country. We try the most district-like fields first and fall back
@@ -46,10 +93,19 @@ def reverse_geocode(lat, lon, timeout=5):
     cache_key = f"{round(lat, 2)},{round(lon, 2)}"
     if cache_key in _geocode_cache:
         return _geocode_cache[cache_key]
+    if time.time() - _failures.get(cache_key, 0) < FAILURE_RETRY_SECONDS:
+        return {"country": None, "state": None, "district": None}
 
     result = {"country": None, "state": None, "district": None}
 
+    global _last_request_time
+    ok = False
     try:
+        with _cache_lock:  # serialise calls so we honour the 1 req/s policy
+            wait = MIN_REQUEST_INTERVAL - (time.time() - _last_request_time)
+            if wait > 0:
+                time.sleep(wait)
+            _last_request_time = time.time()
         response = requests.get(
             NOMINATIM_URL,
             params={"lat": lat, "lon": lon, "format": "jsonv2", "zoom": 10, "addressdetails": 1},
@@ -66,6 +122,7 @@ def reverse_geocode(lat, lon, timeout=5):
             if address.get(field):
                 result["district"] = address[field]
                 break
+        ok = True
 
     except (requests.RequestException, ValueError):
         # Network failure, timeout, bad JSON, etc. - leave result as all-None.
@@ -73,5 +130,9 @@ def reverse_geocode(lat, lon, timeout=5):
         # generic default list, it never breaks the prediction itself.
         pass
 
-    _geocode_cache[cache_key] = result
+    if ok:
+        _geocode_cache[cache_key] = result
+        _save_disk_cache()
+    else:
+        _failures[cache_key] = time.time()
     return result

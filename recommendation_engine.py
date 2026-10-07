@@ -18,6 +18,8 @@ import json
 import os
 
 from scoring_utils import analyze_suitability
+from regional_data import store as regional_store, current_season
+from soil_fit import soil_fit_score
 
 REGIONAL_CROPS_PATH = os.path.join("data", "regional_crops.json")
 
@@ -34,6 +36,24 @@ RECOMMENDATION_WEIGHTS = {
 }
 
 assert abs(sum(RECOMMENDATION_WEIGHTS.values()) - 1.0) < 1e-6, "RECOMMENDATION_WEIGHTS must sum to 1.0"
+
+# Soil signal (district soil from the regional pipeline dataset). It only
+# takes part when that data exists for the user's district; its share is
+# carved proportionally out of the three weights above, so with no regional
+# soil data the scoring is exactly the original 50/30/20.
+SOIL_WEIGHT = 0.15
+
+# A crop that is grown in the district, but only in a different season than
+# the current one, gets this regional score (instead of the rank score).
+OTHER_SEASON_REGIONAL_SCORE = 25
+
+
+def effective_weights(soil_available):
+    if not soil_available:
+        return dict(RECOMMENDATION_WEIGHTS)
+    weights = {k: v * (1 - SOIL_WEIGHT) for k, v in RECOMMENDATION_WEIGHTS.items()}
+    weights["soil"] = SOIL_WEIGHT
+    return weights
 
 # How many candidate crops to show in the final ranked list.
 MAX_RECOMMENDATIONS = 6
@@ -98,6 +118,39 @@ def get_regional_crops(country=None, state=None, district=None):
     return default_node.get(_COMMON_KEY, []), "default"
 
 
+def get_regional_context(country=None, state=None, district=None, season=None):
+    """
+    Full regional lookup used by /region and /predict. Source priority for
+    the crop list:
+      1. pipeline dataset, district   (real data, season-specific)
+      2. pipeline dataset, state      (>= MIN_DISTRICTS_FOR_STATE districts)
+      3. data/regional_crops.json     (static: district -> state -> country -> default)
+    Soil / seasonal climate come from the pipeline dataset only, and are None
+    when it has nothing for this district.
+    """
+    season = season or current_season()
+    found = regional_store.lookup(state, district, season)
+
+    if found and found["crops"]:
+        return {
+            "crops": found["crops"], "matched_level": found["level"],
+            "source": "pipeline_dataset", "season": season,
+            "other_season_crops": found["other_season_crops"],
+            "soil": found["soil"], "seasonal_climate": found["seasonal_climate"],
+        }
+
+    crops, level = get_regional_crops(country=country, state=state, district=district)
+    return {
+        "crops": crops, "matched_level": level,
+        "source": "static_json" if level != "default" else "default",
+        "season": None,  # the static list carries no season information
+        "other_season_crops": [],
+        # district soil/climate can exist even when crop labels don't
+        "soil": found["soil"] if found else None,
+        "seasonal_climate": found["seasonal_climate"] if found else None,
+    }
+
+
 # ---------------------------------------------------------------------------
 # Crop name normalization
 #
@@ -114,9 +167,9 @@ def normalize_crop_key(display_name):
 # ---------------------------------------------------------------------------
 # Regional popularity score for one candidate crop.
 # ---------------------------------------------------------------------------
-def _regional_score(crop_key, regional_crops_normalized):
+def _regional_score(crop_key, regional_crops_normalized, other_season_normalized=()):
     if crop_key not in regional_crops_normalized:
-        return 0
+        return OTHER_SEASON_REGIONAL_SCORE if crop_key in other_season_normalized else 0
     rank = regional_crops_normalized.index(crop_key)
     if rank < len(_RANK_SCORES):
         return _RANK_SCORES[rank]
@@ -137,11 +190,14 @@ def _weather_score(crop_key, crop_info, weather):
     return analyze_suitability(details, weather)["overall_percentage"]
 
 
-def _reason_bullets(regional_rank_score, weather_score, ml_score, in_ml_vocabulary):
+def _reason_bullets(regional_rank_score, weather_score, ml_score, in_ml_vocabulary,
+                    soil_score=None, other_season_only=False):
     """Builds the ✔/⚠/✖ explanation lines shown under each recommendation."""
     reasons = []
 
-    if regional_rank_score >= 70:
+    if other_season_only:
+        reasons.append({"ok": None, "text": "Grown locally, but mainly in a different season"})
+    elif regional_rank_score >= 70:
         reasons.append({"ok": True, "text": "Common in your region"})
     elif regional_rank_score > 0:
         reasons.append({"ok": True, "text": "Grown in your region, though less widely"})
@@ -166,6 +222,14 @@ def _reason_bullets(regional_rank_score, weather_score, ml_score, in_ml_vocabula
     else:
         reasons.append({"ok": False, "text": "Not indicated by soil/climate model"})
 
+    if soil_score is not None:
+        if soil_score >= 75:
+            reasons.append({"ok": True, "text": "District soil data fits this crop"})
+        elif soil_score >= 50:
+            reasons.append({"ok": None, "text": "District soil data partly fits this crop"})
+        else:
+            reasons.append({"ok": False, "text": "District soil data is a poor fit"})
+
     return reasons
 
 
@@ -185,16 +249,26 @@ def _stars(overall_score):
 # crop_info: the full data/crop_info.json dict (for ideal ranges + display names).
 # weather: {"temperature", "humidity", "rainfall"} - same values sent to the model.
 # ---------------------------------------------------------------------------
-def build_recommendations(ml_probabilities, common_crops, crop_info, weather):
+def build_recommendations(ml_probabilities, common_crops, crop_info, weather,
+                         other_season_crops=None, regional_soil=None):
     regional_normalized = [normalize_crop_key(c) for c in common_crops]
+    other_season_normalized = [normalize_crop_key(c) for c in (other_season_crops or [])]
+    soil_inputs = None
+    if regional_soil:
+        soil_inputs = {"N": regional_soil.get("N"), "P": regional_soil.get("P"),
+                       "K": regional_soil.get("K"), "ph": regional_soil.get("ph")}
+
+    # Soil takes part only if the district really has at least one soil value.
+    soil_active = bool(soil_inputs) and any(v is not None for v in soil_inputs.values())
+    weights = effective_weights(soil_active)
 
     # Candidate pool = every regional crop + the model's top predictions.
     # A dict keyed by normalized crop key keeps the union de-duplicated
     # while preserving one display name per crop.
     candidates = {}
 
-    for display_name in common_crops:
-        candidates[normalize_crop_key(display_name)] = display_name
+    for display_name in list(common_crops) + list(other_season_crops or []):
+        candidates.setdefault(normalize_crop_key(display_name), display_name)
 
     top_ml_crops = sorted(ml_probabilities.items(), key=lambda kv: kv[1], reverse=True)[:5]
     for crop_key, _ in top_ml_crops:
@@ -207,14 +281,18 @@ def build_recommendations(ml_probabilities, common_crops, crop_info, weather):
         in_ml_vocabulary = crop_key in ml_probabilities
         ml_score = ml_probabilities.get(crop_key, 0)
 
-        regional_score = _regional_score(crop_key, regional_normalized)
+        regional_score = _regional_score(crop_key, regional_normalized, other_season_normalized)
         weather_score = _weather_score(crop_key, crop_info, weather)
         weather_score_for_math = weather_score if weather_score is not None else 50  # neutral, not punitive
 
+        soil_score = soil_fit_score(crop_key, soil_inputs) if soil_active else None
+        soil_score_for_math = soil_score if soil_score is not None else 50  # neutral when crop has no soil reference
+
         overall = (
-            ml_score * RECOMMENDATION_WEIGHTS["ml"]
-            + regional_score * RECOMMENDATION_WEIGHTS["regional"]
-            + weather_score_for_math * RECOMMENDATION_WEIGHTS["weather"]
+            ml_score * weights["ml"]
+            + regional_score * weights["regional"]
+            + weather_score_for_math * weights["weather"]
+            + (soil_score_for_math * weights["soil"] if soil_active else 0)
         )
 
         scored.append({
@@ -226,11 +304,15 @@ def build_recommendations(ml_probabilities, common_crops, crop_info, weather):
                 "ml_confidence": round(ml_score, 1),
                 "regional_popularity": regional_score,
                 "weather_suitability": weather_score,  # may be None -> shown as "N/A" in UI
+                "soil_fit": soil_score,                # None when no district soil data / no reference
             },
-            "reasons": _reason_bullets(regional_score, weather_score, ml_score, in_ml_vocabulary),
-            "in_regional_list": regional_score > 0,
+            "reasons": _reason_bullets(
+                regional_score, weather_score, ml_score, in_ml_vocabulary, soil_score,
+                other_season_only=(crop_key not in regional_normalized and crop_key in other_season_normalized),
+            ),
+            "in_regional_list": crop_key in regional_normalized,
             "in_ml_vocabulary": in_ml_vocabulary,
         })
 
     scored.sort(key=lambda r: r["overall_score"], reverse=True)
-    return scored[:MAX_RECOMMENDATIONS]
+    return scored[:MAX_RECOMMENDATIONS], weights

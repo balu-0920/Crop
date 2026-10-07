@@ -4,3 +4,6 @@ numpy
 scikit-learn
 joblib
 requests
+xgboost
+matplotlib
+python-dotenv

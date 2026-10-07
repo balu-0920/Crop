@@ -61,6 +61,10 @@ CropRecommendation_final/
 ├── scoring_utils.py             # shared rule-based weather-suitability scoring
 ├── geocoding.py                 # Nominatim reverse geocoding (Part 2)
 ├── recommendation_engine.py     # regional lookup + ranked scoring (Part 2 + 3)
+├── regional_data.py             # reads dataset_pipeline output (season-aware crops, soil)
+├── soil_fit.py                  # crop soil-fit from training-data ranges
+├── dataset_pipeline/            # offline NASA POWER / SoilGrids / SHC data pipeline
+├── tests/                       # unit tests
 │
 ├── data/
 │   ├── Crop_recommendation.csv # training dataset (2200 rows, 22 crops)
@@ -205,3 +209,70 @@ humidity, pH and rainfall were spot-checked and left unchanged - see
 `CHANGELOG_NPK_CORRECTION.md` for full sources, the exact method, and
 what's still worth auditing further. The frontend's soil-input hints
 were updated to match.
+
+## Phase 10 summary - regional data pipeline connected to the recommendation engine
+
+### Data flow
+
+```
+Browser: city search -> OpenWeatherMap (current + 24h forecast rain)   [unchanged, frontend-side]
+   |  lat/lon, weather, user soil inputs (N, P, K, pH)
+   v
+POST /predict
+   1. Location -> district/region   geocoding.py (Nominatim; successful lookups cached on disk, 30 days)
+   2. Season                        current month -> Kharif / Rabi / Zaid (ICAR definitions), or "season" in request
+   3. Regional data                 regional_data.py reads the pipeline CSV, if it exists:
+                                      district + season crops -> state + season crops (needs >= 3 districts)
+                                      -> otherwise static data/regional_crops.json (district -> state -> country -> default)
+   4. Soil information              district pH / N / P / K / texture from the pipeline CSV (if present)
+   5. Weather                       live weather + 24h forecast rainfall sent by the frontend
+   6. ML prediction                 Random Forest probabilities for all 22 crops (unchanged)
+   7. Ranking                       recommendation_engine.build_recommendations()
+```
+
+### What is used from where
+
+| Signal | Source | Used when |
+|---|---|---|
+| ML suitability | `models/crop_model.pkl` | always |
+| Regional crop suitability | pipeline `major_crop` / `secondary_crops` for the current season, else static JSON | always (source reported in the response as `regional_data.source`) |
+| Season | month of year; crops grown locally only in another season score 25 instead of 0 | pipeline data has season info for the district/state |
+| Soil | district soil (pH, N, P, K) compared with the 10th-90th percentile band each crop shows in the training dataset (`soil_fit.py`) | the pipeline CSV has at least one soil value for the district |
+| Weather | existing rule-based suitability (`scoring_utils.py`) | always |
+
+Weights: ML 50% / Regional 30% / Weather 20% as before. When district soil exists, Soil takes 15%, carved proportionally out of the other three (ML 42.5 / Regional 25.5 / Weather 17 / Soil 15). With no soil data the scoring is exactly what it was before. Edit `RECOMMENDATION_WEIGHTS` / `SOIL_WEIGHT` in `recommendation_engine.py`.
+
+### Important: the pipeline has to be run for any of this to be active
+
+`dataset_pipeline/` is a set of scripts, not a dataset - no generated CSV ships with this project. Until you run it, the app reports `regional_data.source = "static_json"` and behaves as before. The loader looks for `dataset_pipeline/output/india_crop_dataset.csv` (or `dataset_pipeline/src/output/...`, which is where it lands when you run the scripts from `src/` as the pipeline README says), or the path in `REGIONAL_DATASET_PATH`. The file is re-read automatically when it changes; no restart needed.
+
+What the pipeline can fill in, honestly:
+- Climate (NASA POWER) and soil pH / texture (ISRIC SoilGrids): automatic, public APIs, no key.
+- N / P / K and `major_crop` / `secondary_crops`: need the manual Soil Health Card and crop-production downloads (pipeline steps 4-5). Skip them and those columns stay empty; the engine then keeps using the static crop list, and only uses soil that exists (pH, probably).
+- The seed list covers 15 districts; for others, the engine falls back to static data. Nothing is guessed or interpolated.
+
+District matching is by normalised name (case/accents/"District" suffix ignored) against what OpenStreetMap returns; spelling differences (e.g. Mysore/Mysuru) will simply fall back. Government crop names are mapped to the model's names where they are plain synonyms (Paddy -> Rice, Arhar/Tur -> Pigeonpeas, ...) - see `CROP_ALIASES` in `regional_data.py`.
+
+### Caching
+
+- Reverse geocoding: in-memory + `cache/geocode_cache.json` (30-day TTL, survives restarts); also rate-limited to Nominatim's 1 request/second; failures are only remembered for 5 minutes and never written to disk.
+- Regional dataset: parsed once, re-parsed only if the file's modification time changes.
+- Weather is still fetched by the browser directly from OpenWeatherMap (unchanged).
+
+### Configuration (.env)
+
+Copy `.env.example` to `.env` (git-ignored). Optional keys: `NOMINATIM_USER_AGENT`, `REGIONAL_DATASET_PATH`, `CACHE_DIR`.
+
+**Security note:** the OpenWeatherMap key is hard-coded in `weather/main.js` (pre-existing, left untouched to preserve the frontend). A key in browser JavaScript is visible to anyone who loads the page. Moving it into `.env` needs a small server-side weather proxy plus a one-line change in `main.js` - recommended as a follow-up, and consider regenerating that key if the code has been shared.
+
+### New response fields (additive; the existing frontend ignores what it doesn't use)
+
+`/region` adds `data_source`, `season`, `regional_soil`. `/predict` adds `regional_data {source, season, soil, seasonal_climate}`, `score_breakdown.soil_fit`, and `recommendation_weights` now reflects the weights actually used.
+
+### Tests
+
+`python -m unittest discover -s tests -v` (uses a throw-away CSV fixture written at test time; not real data).
+
+### Files changed
+
+New: `regional_data.py`, `soil_fit.py`, `tests/test_regional_data.py`, `.env.example`. Modified: `recommendation_engine.py`, `app.py`, `geocoding.py`, `requirements.txt`, `.gitignore`, `README.md`.
