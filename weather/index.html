@@ -27,6 +27,8 @@
             </div>
         </div>
         <div class="topbar-meta">
+            <a class="topbar-pill" href="agent.html" style="text-decoration:none"><i class="fa-solid fa-diagram-project"></i> Decision Agent</a>
+            <a class="topbar-pill" href="assistant.html" style="text-decoration:none"><i class="fa-solid fa-book-open"></i> Agriculture Assistant</a>
             <span class="topbar-pill"><i class="fa-solid fa-microchip"></i> ML Engine Online</span>
         </div>
     </header>
@@ -238,43 +240,15 @@
                 <!-- Crop Result -->
                 <div class="crop-result hidden">
 
-                    <!-- Prediction Hero -->
-                    <div class="prediction-hero">
-                        <div class="result-header">
-                            <img id="cropImage" src="" alt="" class="crop-image">
-                            <div class="result-title">
-                                <span class="section-eyebrow"><i class="fa-solid fa-robot"></i> Machine Learning Prediction</span>
-                                <h2 id="cropName">--</h2>
-                                <p id="cropScientificName" class="scientific-name"></p>
-                            </div>
+                    <!-- Overall Recommendations -->
+                    <div class="panel recommendation-section" id="recommendationSection">
+                        <div class="panel-heading">
+                            <h3><i class="fa-solid fa-ranking-star"></i> Overall Recommendations</h3>
                         </div>
-
-                        <p id="cropDescription" class="crop-description"></p>
-
-                        <div class="result-stats">
-                            <div class="stat-box">
-                                <span>Confidence</span>
-                                <p id="confidenceValue">--</p>
-                                <div class="progress-track"><div class="progress-fill" id="confidenceBar"></div></div>
-                            </div>
-                            <div class="stat-box">
-                                <span>Suitability</span>
-                                <p id="suitabilityValue">--</p>
-                                <div class="progress-track"><div class="progress-fill" id="suitabilityBar"></div></div>
-                            </div>
-                            <div class="stat-box stat-box-plain">
-                                <span>Harvest Time</span>
-                                <p id="harvestTimeValue">--</p>
-                            </div>
-                            <div class="stat-box stat-box-plain">
-                                <span>Water Need</span>
-                                <p id="waterNeedValue">--</p>
-                            </div>
-                            <div class="stat-box stat-box-plain">
-                                <span>Predicted At</span>
-                                <p id="predictionTimeValue">--</p>
-                            </div>
-                        </div>
+                        <p id="recommendationWeightsLine" class="recommendation-subtext"></p>
+                        <div id="decisionCard" class="decision-card hidden"></div>
+                        <div id="explainCard" class="explain-card hidden"></div>
+                        <ol id="recommendationsList" class="recommendation-list"></ol>
                     </div>
 
                     <!-- Secondary detail grid -->
@@ -319,13 +293,43 @@
 
                     </div>
 
-                    <!-- Overall Recommendations -->
-                    <div class="panel recommendation-section" id="recommendationSection">
-                        <div class="panel-heading">
-                            <h3><i class="fa-solid fa-ranking-star"></i> Overall Recommendations</h3>
+                    <!-- Prediction Hero -->
+                    <div class="prediction-hero">
+                        <div class="result-header">
+                            <img id="cropImage" src="" alt="" class="crop-image">
+                            <div class="result-title">
+                                <span class="section-eyebrow"><i class="fa-solid fa-robot"></i> Machine Learning Prediction</span>
+                                <h2 id="cropName">--</h2>
+                                <p id="cropScientificName" class="scientific-name"></p>
+                            </div>
                         </div>
-                        <p id="recommendationWeightsLine" class="recommendation-subtext"></p>
-                        <ol id="recommendationsList" class="recommendation-list"></ol>
+
+                        <p id="cropDescription" class="crop-description"></p>
+
+                        <div class="result-stats">
+                            <div class="stat-box">
+                                <span>Confidence</span>
+                                <p id="confidenceValue">--</p>
+                                <div class="progress-track"><div class="progress-fill" id="confidenceBar"></div></div>
+                            </div>
+                            <div class="stat-box">
+                                <span>Suitability</span>
+                                <p id="suitabilityValue">--</p>
+                                <div class="progress-track"><div class="progress-fill" id="suitabilityBar"></div></div>
+                            </div>
+                            <div class="stat-box stat-box-plain">
+                                <span>Harvest Time</span>
+                                <p id="harvestTimeValue">--</p>
+                            </div>
+                            <div class="stat-box stat-box-plain">
+                                <span>Water Need</span>
+                                <p id="waterNeedValue">--</p>
+                            </div>
+                            <div class="stat-box stat-box-plain">
+                                <span>Predicted At</span>
+                                <p id="predictionTimeValue">--</p>
+                            </div>
+                        </div>
                     </div>
 
                 </div>

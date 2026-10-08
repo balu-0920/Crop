@@ -61,6 +61,10 @@ CropRecommendation_final/
 ├── scoring_utils.py             # shared rule-based weather-suitability scoring
 ├── geocoding.py                 # Nominatim reverse geocoding (Part 2)
 ├── recommendation_engine.py     # regional lookup + ranked scoring (Part 2 + 3)
+├── regional_data.py             # reads dataset_pipeline output (season-aware crops, soil)
+├── soil_fit.py                  # crop soil-fit from training-data ranges
+├── dataset_pipeline/            # offline NASA POWER / SoilGrids / SHC data pipeline
+├── tests/                       # unit tests
 │
 ├── data/
 │   ├── Crop_recommendation.csv # training dataset (2200 rows, 22 crops)
@@ -205,3 +209,180 @@ humidity, pH and rainfall were spot-checked and left unchanged - see
 `CHANGELOG_NPK_CORRECTION.md` for full sources, the exact method, and
 what's still worth auditing further. The frontend's soil-input hints
 were updated to match.
+
+## Phase 10 summary - regional data pipeline connected to the recommendation engine
+
+### Data flow
+
+```
+Browser: city search -> OpenWeatherMap (current + 24h forecast rain)   [unchanged, frontend-side]
+   |  lat/lon, weather, user soil inputs (N, P, K, pH)
+   v
+POST /predict
+   1. Location -> district/region   geocoding.py (Nominatim; successful lookups cached on disk, 30 days)
+   2. Season                        current month -> Kharif / Rabi / Zaid (ICAR definitions), or "season" in request
+   3. Regional data                 regional_data.py reads the pipeline CSV, if it exists:
+                                      district + season crops -> state + season crops (needs >= 3 districts)
+                                      -> otherwise static data/regional_crops.json (district -> state -> country -> default)
+   4. Soil information              district pH / N / P / K / texture from the pipeline CSV (if present)
+   5. Weather                       live weather + 24h forecast rainfall sent by the frontend
+   6. ML prediction                 Random Forest probabilities for all 22 crops (unchanged)
+   7. Ranking                       recommendation_engine.build_recommendations()
+```
+
+### What is used from where
+
+| Signal | Source | Used when |
+|---|---|---|
+| ML suitability | `models/crop_model.pkl` | always |
+| Regional crop suitability | pipeline `major_crop` / `secondary_crops` for the current season, else static JSON | always (source reported in the response as `regional_data.source`) |
+| Season | month of year; crops grown locally only in another season score 25 instead of 0 | pipeline data has season info for the district/state |
+| Soil | district soil (pH, N, P, K) compared with the 10th-90th percentile band each crop shows in the training dataset (`soil_fit.py`) | the pipeline CSV has at least one soil value for the district |
+| Weather | existing rule-based suitability (`scoring_utils.py`) | always |
+
+Weights: ML 50% / Regional 30% / Weather 20% as before. When district soil exists, Soil takes 15%, carved proportionally out of the other three (ML 42.5 / Regional 25.5 / Weather 17 / Soil 15). With no soil data the scoring is exactly what it was before. Edit `RECOMMENDATION_WEIGHTS` / `SOIL_WEIGHT` in `recommendation_engine.py`.
+
+### Important: the pipeline has to be run for any of this to be active
+
+`dataset_pipeline/` is a set of scripts, not a dataset - no generated CSV ships with this project. Until you run it, the app reports `regional_data.source = "static_json"` and behaves as before. The loader looks for `dataset_pipeline/output/india_crop_dataset.csv` (or `dataset_pipeline/src/output/...`, which is where it lands when you run the scripts from `src/` as the pipeline README says), or the path in `REGIONAL_DATASET_PATH`. The file is re-read automatically when it changes; no restart needed.
+
+What the pipeline can fill in, honestly:
+- Climate (NASA POWER) and soil pH / texture (ISRIC SoilGrids): automatic, public APIs, no key.
+- N / P / K and `major_crop` / `secondary_crops`: need the manual Soil Health Card and crop-production downloads (pipeline steps 4-5). Skip them and those columns stay empty; the engine then keeps using the static crop list, and only uses soil that exists (pH, probably).
+- The seed list covers 15 districts; for others, the engine falls back to static data. Nothing is guessed or interpolated.
+
+District matching is by normalised name (case/accents/"District" suffix ignored) against what OpenStreetMap returns; spelling differences (e.g. Mysore/Mysuru) will simply fall back. Government crop names are mapped to the model's names where they are plain synonyms (Paddy -> Rice, Arhar/Tur -> Pigeonpeas, ...) - see `CROP_ALIASES` in `regional_data.py`.
+
+### Caching
+
+- Reverse geocoding: in-memory + `cache/geocode_cache.json` (30-day TTL, survives restarts); also rate-limited to Nominatim's 1 request/second; failures are only remembered for 5 minutes and never written to disk.
+- Regional dataset: parsed once, re-parsed only if the file's modification time changes.
+- Weather is still fetched by the browser directly from OpenWeatherMap (unchanged).
+
+### Configuration (.env)
+
+Copy `.env.example` to `.env` (git-ignored). Optional keys: `NOMINATIM_USER_AGENT`, `REGIONAL_DATASET_PATH`, `CACHE_DIR`.
+
+**Security note:** the OpenWeatherMap key is hard-coded in `weather/main.js` (pre-existing, left untouched to preserve the frontend). A key in browser JavaScript is visible to anyone who loads the page. Moving it into `.env` needs a small server-side weather proxy plus a one-line change in `main.js` - recommended as a follow-up, and consider regenerating that key if the code has been shared.
+
+### New response fields (additive; the existing frontend ignores what it doesn't use)
+
+`/region` adds `data_source`, `season`, `regional_soil`. `/predict` adds `regional_data {source, season, soil, seasonal_climate}`, `score_breakdown.soil_fit`, and `recommendation_weights` now reflects the weights actually used.
+
+### Tests
+
+`python -m unittest discover -s tests -v` (uses a throw-away CSV fixture written at test time; not real data).
+
+### Files changed
+
+New: `regional_data.py`, `soil_fit.py`, `tests/test_regional_data.py`, `.env.example`. Modified: `recommendation_engine.py`, `app.py`, `geocoding.py`, `requirements.txt`, `.gitignore`, `README.md`.
+
+## Phase 11 summary - profitability and risk decision layer
+
+### What data exists (audit result)
+
+| Needed | In the project? | Status |
+|---|---|---|
+| Crop price | No | **Unavailable** - add `data/economics/market_prices.csv` |
+| Cultivation cost | No | **Unavailable** - add `data/economics/cultivation_costs.csv` |
+| Expected yield | No (no yield labels anywhere; no yield model) | **Unavailable** - add `data/economics/historical_yields.csv` |
+| Regional production | Only via the pipeline, not yet generated | Used as crop lists when present (Phase 10) |
+| Weather risk | Yes - current temperature, humidity, 24h rain vs crop ideal ranges | **Available** |
+
+The three economics CSVs ship as header-only templates (`data/economics/README.md` has the columns, units and suggested public sources). Nothing is pre-filled: no price, cost or yield in this project is invented. Until you add real rows, yield / revenue / profit are returned as `{"available": false, "reason": ...}` and shown as "Unavailable" in the UI. `GET /data_status` shows what is loaded.
+
+### Formulas
+
+```
+Revenue (INR/ha) = expected yield (t/ha) x price (INR/quintal) x 10
+Profit  (INR/ha) = revenue - cultivation cost (INR/ha)
+```
+Expected yield = median of the latest 5 years of `historical_yields.csv` at the most specific level (district, then state, then national); range = 10th-90th percentile (min-max if < 5 values). Price/cost use the newest row (district -> state -> national); prices older than 1 year are flagged `stale`. Ranges cover yield variability only - price volatility is not modelled.
+
+**Risk score (0-100, `risk.py`)** - weighted mean of the components that can be measured:
+
+| Component | Weight | Definition |
+|---|---|---|
+| Temperature stress | 0.35 | `min(100, 100 x distance outside the crop's ideal range / range width)` for today's temperature (heat or cold) |
+| Rainfall stress | 0.40 | same formula for rain: excess (waterlogging) or deficit (drought indicator) |
+| Rainfall variability | 0.25 | district's year-to-year CV% of seasonal rainfall x 2, capped at 100; only with >= 5 years from the regional pipeline |
+
+Levels: < 20 Low, < 45 Medium, else High. Components without data are dropped and the weights re-normalised. **Unavailable and reported as such:** a multi-week drought index (needs rainfall history) and forecast uncertainty (the weather input has no spread). Temperature and rain are a snapshot of current conditions, not a season outlook.
+
+**Final ranking score (`decision.py`)** - every component is 0-100, higher is better:
+
+```
+final = sum(w_i x component_i) / sum(w_i)    over the components that are available
+
+suitability  w=0.45   existing recommendation score (ML + regional + weather + soil)
+yield        w=0.15   expected yield / best yield ever recorded for that crop in historical_yields.csv
+profit       w=0.25   profit / highest profit among the candidates (a loss scores 0)
+safety       w=0.15   100 - risk score
+```
+These weights are a documented judgement call, **not fitted to outcome data**: suitability is the only component backed by a trained model; profit outweighs yield because it already contains yield; risk is a moderate modifier. Edit `DECISION_WEIGHTS` (`decision.py`) and `RISK_WEIGHTS` (`risk.py`). With no economics data, `final = 0.75 x suitability + 0.25 x (100 - risk)`; the response lists `components_used` and `components_unavailable` for every crop.
+
+Known limitations: weather already feeds suitability, so risk partly overlaps with it (risk measures severity outside the ideal range, suitability measures overall fit); a crop with economics data and one without are scored on different component sets, so fill the data for all candidate crops to compare fairly; profit is an estimate from historical figures, not a forecast of farm results.
+
+### API
+
+`POST /predict` -> each item in `recommendations` now has a `decision` object: `final_score`, `suitability_pct`, `expected_yield`, `market_price`, `cultivation_cost`, `revenue`, `profit`, `risk {score, level, components, drivers, unavailable}`, `components`, `components_used`, `components_unavailable`, `main_reasons`. The list is sorted by `final_score`; top-level `decision_weights` is returned too. `GET /data_status` reports economics/regional data availability.
+
+### Frontend
+
+`weather/index.html`, `main.js`, `style.css`: a "Recommended crop" card (suitability, expected yield, revenue, profit, risk level, final score, main reasons) above the existing ranked list; unavailable fields are shown as "Unavailable" with the reason on hover. Each list row also shows a risk badge.
+
+### Tests
+
+`python -m unittest discover -s tests -v` (22 tests; CSV fixtures are test-only placeholders written to a temp dir).
+
+## Phase 12 summary - explainable AI
+
+`explain.py` uses SHAP (`TreeExplainer`) on the Random Forest to explain each prediction. For the ML-predicted crop (and the top-ranked crop, if different) `/predict` returns `explanations[crop_key]`: per-feature `contribution` in percentage points of the model's probability (base rate + contributions = model probability), sorted by influence. If SHAP is unavailable it falls back to the model's global feature importance (`method: "feature_importance"`). The frontend shows the bars under the recommended-crop card.
+
+Honesty note (also returned in the response): this shows how the trained model weighs the inputs for one prediction. It is not causal proof that those factors drive real crop success, and inputs that move together in the training data share credit. Tests: `tests/test_explain.py`.
+
+## Phase 13 summary - agricultural RAG assistant (independent of the crop ML model)
+
+```
+PDFs (rag/documents/) -> pypdf text per page -> sentence-packed chunks (~900 chars, overlap, never spanning pages)
+  -> local embeddings (fastembed, BAAI/bge-small-en-v1.5, ONNX, no PyTorch) -> vector store (rag/index/: vectors.npy + chunks.json + manifest.json)
+Question -> embed -> top-5 cosine matches -> drop chunks below RAG_MIN_SCORE -> LLM (Anthropic) sees ONLY those numbered passages
+  -> answer with [n] citations + the documents/pages cited + the retrieved passages (with scores)
+```
+
+- **Grounding:** if no chunk is relevant enough, the API says the documents don't contain enough information *without calling the LLM*; the LLM is also told to answer `INSUFFICIENT_CONTEXT` if the passages don't cover the question, and to ignore any instructions inside passages.
+- **Vector store:** a NumPy matrix with exact cosine search (vectors are pre-normalised). It is the simplest dependable option at this scale (a few thousand chunks) and adds no database dependency; `rag/store.py` is the only file to change if you move to Chroma/FAISS.
+- **Metadata:** each chunk keeps document filename, PDF title, page number, chunk id; the manifest keeps SHA-256, page/chunk counts, ingest time and the embedding model. Re-running ingest only re-embeds new/changed PDFs and drops deleted ones.
+- **Keys:** `ANTHROPIC_API_KEY` (and optional `RAG_LLM_MODEL`) are read from `.env` only. Without a key, `/ask` returns 503 plus the retrieved passages.
+- **No documents are bundled.** Add authoritative PDFs (ICAR/SAU package of practices, FAO, government advisories) to `rag/documents/`. Scanned PDFs (no text layer) are skipped - OCR is not supported.
+- **Tuning:** `RAG_MIN_SCORE` (default 0.45) is a similarity floor that depends on the embedding model; check it against your own documents. The assistant is single-turn (no chat memory).
+
+Endpoints: `POST /api/agriculture/ask` `{"question": "..."}` -> `{success, question, answer, answerable, sources[{document,title,page,passage}], retrieved_context[{document,page,score,excerpt,used_in_answer,...}]}`; `GET /api/agriculture/status`. UI: `weather/assistant.html` (linked from the top bar). Tests: `tests/test_rag.py` (uses a hashing embedder and stub LLM so it runs offline).
+
+## Phase 14 summary - LangGraph decision agent (`POST /api/agent/advice`)
+
+A small, single-pass LangGraph agent that answers questions like *"Should I grow soybean in my farm this season?"* by calling the existing systems as tools. It adds no new ML, scoring or RAG logic; `app.py`'s prediction code was moved into a function `predict_core(data)` (the `/predict` route now just wraps it - responses verified byte-identical before/after).
+
+```
+understand --> [get_weather] --> [predict_crop] --> [estimate_yield_profit] --> [search_agri_documents] --> synthesize
+(LLM: crop + search query)   brackets = skipped by conditional edges when not needed or inputs are missing     (LLM: advice JSON)
+```
+The graph is a DAG (each node's edges only point forward - checked by a test), so there are no loops and no autonomous retries. Exactly four tools:
+
+| Tool | Wraps | Notes |
+|---|---|---|
+| `get_weather` | OpenWeatherMap current + forecast (`OPENWEATHER_API_KEY` in `.env`) | next-24h rain = sum of the first 8 three-hour slots (same as `main.js`); 10-minute cache; if the forecast fails, rainfall is *unavailable*, never estimated |
+| `predict_crop` | `predict_core` (ML model + recommendation + decision layer + SHAP) | needs weather and your soil N/P/K/pH |
+| `estimate_yield_profit` | `economics.py` + `risk.py` | uses your price/cost/yield CSVs; unavailable fields stay unavailable |
+| `search_agri_documents` | the RAG pipeline (`rag/`) | returns grounded answer + passages + sources |
+
+### How the numbers are protected
+1. Tool outputs become labelled **facts** (`F1..`) and retrieved **passages** (`D1..`); that is all the writing LLM sees, and it is told to copy numbers verbatim, never compute or estimate them, and to say "unavailable" for missing values.
+2. Every reasoning point must cite evidence ids. **Numeric guard (`agent/facts.py`):** any number in a point must appear in the evidence *that point cites*; any number in the summary/caveats must appear in some evidence. Offending statements are removed and listed in `final_reasoning.numeric_check`. Strict: rounding is not allowed.
+3. A deterministic rule forces `insufficient_evidence` if no tool or document produced evidence about the asked crop.
+Limits: the guard checks digits only (not numbers written as words), and cannot detect a real number attached to the wrong quantity; the wording of the advice is still LLM output and can be wrong.
+
+### Response sections (kept separate on purpose)
+`model_prediction` (ML + scoring estimates) - `external_data` (weather service, your price/cost/yield data, rule-based risk) - `retrieved_knowledge` (document passages with sources) - `final_reasoning` (AI-written, validated) - plus `evidence`, `missing_information`, `tool_trace`. Request: `{"question", "location" or "lat"+"lon", "soil": {"N","P","K","ph"}, "season"?}`; missing location/soil are reported in `missing_information` and those tools are skipped. 503 (no `ANTHROPIC_API_KEY`) still returns the collected evidence.
+
+Soybean is not one of the ML model's 22 crops, so the agent will say the ML model gives no suitability for it, and until you add economics data and documents it will typically answer "not enough evidence" - by design. See `agent/example_request_response.json` (generated with test doubles - see its `_note`). UI: `weather/agent.html`. Tests: `tests/test_agent.py`.

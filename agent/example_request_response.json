@@ -1,0 +1,487 @@
+{
+  "_note": "ILLUSTRATIVE RUN generated with test doubles: canned OpenWeatherMap responses, a scripted LLM, and a generated test PDF as the 'document'. The ML model, economics/risk code, tools, graph and numeric guard were real. Do not read the weather values or document text as real data.",
+  "request": {
+    "question": "Should I grow soybean in my farm this season?",
+    "location": "Hyderabad",
+    "soil": {
+      "N": 90,
+      "P": 42,
+      "K": 43,
+      "ph": 6.5
+    }
+  },
+  "response": {
+    "evidence": {
+      "facts": [
+        {
+          "available": true,
+          "category": "external_data",
+          "id": "F1",
+          "label": "Weather location",
+          "reason": null,
+          "value": "Hyderabad, IN"
+        },
+        {
+          "available": true,
+          "category": "external_data",
+          "id": "F2",
+          "label": "Current temperature",
+          "reason": null,
+          "value": "27.3 C"
+        },
+        {
+          "available": true,
+          "category": "external_data",
+          "id": "F3",
+          "label": "Current humidity",
+          "reason": null,
+          "value": "71 %"
+        },
+        {
+          "available": true,
+          "category": "external_data",
+          "id": "F4",
+          "label": "Current conditions",
+          "reason": null,
+          "value": "Clouds"
+        },
+        {
+          "available": true,
+          "category": "external_data",
+          "id": "F5",
+          "label": "Forecast rainfall, next 24 h",
+          "reason": null,
+          "value": "2.0 mm"
+        },
+        {
+          "available": true,
+          "category": "external_data",
+          "id": "F6",
+          "label": "5-day forecast",
+          "reason": null,
+          "value": "temperature 25.0 to 29.0 C, total rain 2.0 mm"
+        },
+        {
+          "available": true,
+          "category": "model_prediction",
+          "id": "F7",
+          "label": "ML model's most likely crop",
+          "reason": null,
+          "value": "muskmelon (35.0 % model probability)"
+        },
+        {
+          "available": true,
+          "category": "model_prediction",
+          "id": "F8",
+          "label": "Ranked recommendation 1",
+          "reason": null,
+          "value": "Cotton: suitability 40.9 %, final score 47.1 %, Medium weather risk"
+        },
+        {
+          "available": true,
+          "category": "model_prediction",
+          "id": "F9",
+          "label": "Ranked recommendation 2",
+          "reason": null,
+          "value": "Rice: suitability 45.4 %, final score 45.9 %, High weather risk"
+        },
+        {
+          "available": true,
+          "category": "model_prediction",
+          "id": "F10",
+          "label": "Ranked recommendation 3",
+          "reason": null,
+          "value": "Maize: suitability 36.6 %, final score 43.9 %, Medium weather risk"
+        },
+        {
+          "available": true,
+          "category": "model_prediction",
+          "id": "F11",
+          "label": "Main model drivers for its top crop (SHAP, percentage points)",
+          "reason": null,
+          "value": "Rainfall +35.16 (raises); Nitrogen (N) -2.39 (lowers); Potassium (K) -2.1 (lowers)"
+        },
+        {
+          "available": true,
+          "category": "model_prediction",
+          "id": "F12",
+          "label": "Asked crop 'soybean' in ranked candidates",
+          "reason": "Not among the top-ranked candidates (or not a crop the ML model knows).",
+          "value": "no"
+        },
+        {
+          "available": false,
+          "category": "external_data",
+          "id": "F13",
+          "label": "Expected yield, soybean",
+          "reason": "Expected yield unavailable: no data file / no rows loaded (data/economics/historical_yields.csv)",
+          "value": null
+        },
+        {
+          "available": false,
+          "category": "external_data",
+          "id": "F14",
+          "label": "Market price, soybean",
+          "reason": "Market price unavailable: no data file / no rows loaded (data/economics/market_prices.csv)",
+          "value": null
+        },
+        {
+          "available": false,
+          "category": "external_data",
+          "id": "F15",
+          "label": "Cultivation cost, soybean",
+          "reason": "Cultivation cost unavailable: no data file / no rows loaded (data/economics/cultivation_costs.csv)",
+          "value": null
+        },
+        {
+          "available": false,
+          "category": "external_data",
+          "id": "F16",
+          "label": "Estimated revenue, soybean",
+          "reason": "Revenue unavailable: missing expected yield and market price",
+          "value": null
+        },
+        {
+          "available": false,
+          "category": "external_data",
+          "id": "F17",
+          "label": "Estimated profit, soybean",
+          "reason": "Profit unavailable: missing expected yield and market price and cultivation cost",
+          "value": null
+        },
+        {
+          "available": false,
+          "category": "external_data",
+          "id": "F18",
+          "label": "Weather risk for soybean",
+          "reason": "No ideal temperature/rainfall ranges are stored for this crop, so weather risk cannot be measured.",
+          "value": null
+        }
+      ],
+      "passages": [
+        {
+          "document": "soy_test.pdf",
+          "id": "D1",
+          "page": 1,
+          "score": 0.53,
+          "text": "Soybean is sown at the onset of the monsoon when soil moisture is adequate. Well drained loamy soils are preferred for soybean sowing in the monsoon season.",
+          "title": "Test Document"
+        }
+      ]
+    },
+    "external_data": {
+      "economics_and_risk": {
+        "available": true,
+        "crop_key": "soybean",
+        "cultivation_cost": {
+          "available": false,
+          "reason": "Cultivation cost unavailable: no data file / no rows loaded (data/economics/cultivation_costs.csv)",
+          "unit": "INR/ha"
+        },
+        "expected_yield": {
+          "available": false,
+          "reason": "Expected yield unavailable: no data file / no rows loaded (data/economics/historical_yields.csv)",
+          "unit": "t/ha"
+        },
+        "market_price": {
+          "available": false,
+          "reason": "Market price unavailable: no data file / no rows loaded (data/economics/market_prices.csv)",
+          "unit": "INR/quintal"
+        },
+        "profit": {
+          "available": false,
+          "reason": "Profit unavailable: missing expected yield and market price and cultivation cost",
+          "unit": "INR/ha"
+        },
+        "revenue": {
+          "available": false,
+          "reason": "Revenue unavailable: missing expected yield and market price",
+          "unit": "INR/ha"
+        },
+        "risk": {
+          "available": false,
+          "reason": "No ideal temperature/rainfall ranges are stored for this crop, so weather risk cannot be measured."
+        },
+        "source": "economics.py (price/cost/yield data files you supply) and risk.py (rule-based weather risk)"
+      },
+      "kind": "Weather service data and price/cost/yield data you supplied, plus a rule-based weather-risk calculation.",
+      "weather": {
+        "available": true,
+        "cached": false,
+        "current": {
+          "condition": "Clouds",
+          "humidity_pct": 71,
+          "temperature_c": 27.3
+        },
+        "fetched_at": "2026-10-08T02:09:48+00:00",
+        "forecast_24h": {
+          "rainfall_mm": 2.0
+        },
+        "forecast_5d": {
+          "hours_covered": 120,
+          "temp_max_c": 29.0,
+          "temp_min_c": 25.0,
+          "total_rain_mm": 2.0
+        },
+        "location": {
+          "country": "IN",
+          "lat": 17.38,
+          "lon": 78.48,
+          "name": "Hyderabad"
+        },
+        "source": "OpenWeatherMap"
+      }
+    },
+    "final_reasoning": {
+      "caveats": [
+        "The ML model's own top crop for these conditions is a different crop; its output is a statistical estimate, not a forecast of your yield."
+      ],
+      "evidence_index": {
+        "D1": "soy_test.pdf, page 1",
+        "F1": "Weather location",
+        "F10": "Ranked recommendation 3",
+        "F11": "Main model drivers for its top crop (SHAP, percentage points)",
+        "F12": "Asked crop 'soybean' in ranked candidates",
+        "F13": "Expected yield, soybean",
+        "F14": "Market price, soybean",
+        "F15": "Cultivation cost, soybean",
+        "F16": "Estimated revenue, soybean",
+        "F17": "Estimated profit, soybean",
+        "F18": "Weather risk for soybean",
+        "F2": "Current temperature",
+        "F3": "Current humidity",
+        "F4": "Current conditions",
+        "F5": "Forecast rainfall, next 24 h",
+        "F6": "5-day forecast",
+        "F7": "ML model's most likely crop",
+        "F8": "Ranked recommendation 1",
+        "F9": "Ranked recommendation 2"
+      },
+      "kind": "AI-written reasoning over the evidence above. It can be wrong; numbers are checked against the tool outputs.",
+      "numeric_check": {
+        "passed": true,
+        "removed": [],
+        "unsupported_numbers": []
+      },
+      "points": [
+        {
+          "evidence": [
+            "F2",
+            "F5"
+          ],
+          "text": "Current temperature is 27.3 C and 2.0 mm of rain is forecast in the next 24 h (external weather data)."
+        },
+        {
+          "evidence": [
+            "F12"
+          ],
+          "text": "The ML model did not rank soybean among its candidates; it is not one of the crops the model was trained on."
+        },
+        {
+          "evidence": [
+            "F13",
+            "F17"
+          ],
+          "text": "Expected yield and estimated profit for soybean are unavailable because no yield, price or cost data is loaded."
+        },
+        {
+          "evidence": [
+            "D1"
+          ],
+          "text": "The indexed documents say soybean is sown at the onset of the monsoon when soil moisture is adequate."
+        }
+      ],
+      "status": "ok",
+      "summary": "There is not enough evidence to say whether soybean is a good choice for your farm. Soybean is outside what the ML model was trained on, and no yield or price data is loaded for it. The documents only cover sowing timing.",
+      "verdict": "insufficient_evidence"
+    },
+    "missing_information": [],
+    "model_prediction": {
+      "kind": "Trained Random Forest + scoring layer. Statistical suitability estimates from a historical dataset.",
+      "result": {
+        "available": true,
+        "ml_top_prediction": {
+          "crop": "muskmelon",
+          "probability_pct": 35.0
+        },
+        "recommendations": [
+          {
+            "crop": "Cotton",
+            "crop_key": "cotton",
+            "final_score_pct": 47.1,
+            "in_ml_vocabulary": true,
+            "ml_probability_pct": 0.0,
+            "rank": 1,
+            "risk_level": "Medium",
+            "suitability_pct": 40.9
+          },
+          {
+            "crop": "Rice",
+            "crop_key": "rice",
+            "final_score_pct": 45.9,
+            "in_ml_vocabulary": true,
+            "ml_probability_pct": 0.0,
+            "rank": 2,
+            "risk_level": "High",
+            "suitability_pct": 45.4
+          },
+          {
+            "crop": "Maize",
+            "crop_key": "maize",
+            "final_score_pct": 43.9,
+            "in_ml_vocabulary": true,
+            "ml_probability_pct": 0.5,
+            "rank": 3,
+            "risk_level": "Medium",
+            "suitability_pct": 36.6
+          },
+          {
+            "crop": "Muskmelon",
+            "crop_key": "muskmelon",
+            "final_score_pct": 39.4,
+            "in_ml_vocabulary": true,
+            "ml_probability_pct": 35.0,
+            "rank": 4,
+            "risk_level": "Medium",
+            "suitability_pct": 30.5
+          },
+          {
+            "crop": "Moth Beans",
+            "crop_key": "mothbeans",
+            "final_score_pct": 37.8,
+            "in_ml_vocabulary": true,
+            "ml_probability_pct": 29.5,
+            "rank": 5,
+            "risk_level": "Medium",
+            "suitability_pct": 25.4
+          },
+          {
+            "crop": "Orange",
+            "crop_key": "orange",
+            "final_score_pct": 27.4,
+            "in_ml_vocabulary": true,
+            "ml_probability_pct": 10.5,
+            "rank": 6,
+            "risk_level": "High",
+            "suitability_pct": 20.6
+          }
+        ],
+        "region": {
+          "country": "India",
+          "district": "Hyderabad",
+          "matched_level": "district",
+          "state": "Telangana"
+        },
+        "regional_data_source": "static_json",
+        "season": null,
+        "seasonal_climate": null,
+        "source": "trained Random Forest + scoring layer (existing /predict pipeline)",
+        "target_crop": {
+          "in_model_vocabulary": null,
+          "key": "soybean",
+          "note": "Not among the top-ranked candidates (or not a crop the ML model knows).",
+          "rank_in_recommendations": null
+        },
+        "top_prediction_drivers": [
+          {
+            "contribution_pts": 35.16,
+            "direction": "raises",
+            "feature": "Rainfall",
+            "value": 2.0
+          },
+          {
+            "contribution_pts": -2.39,
+            "direction": "lowers",
+            "feature": "Nitrogen (N)",
+            "value": 90
+          },
+          {
+            "contribution_pts": -2.1,
+            "direction": "lowers",
+            "feature": "Potassium (K)",
+            "value": 43
+          }
+        ],
+        "weather_used": {
+          "humidity": 71,
+          "rainfall": 2.0,
+          "temperature": 27.3
+        }
+      }
+    },
+    "plan": {
+      "crop": "soybean",
+      "is_agricultural": true,
+      "steps": [
+        "get_weather",
+        "predict_crop",
+        "estimate_yield_profit",
+        "search_agri_documents"
+      ],
+      "understanding_method": "llm"
+    },
+    "question": "Should I grow soybean in my farm this season?",
+    "retrieved_knowledge": {
+      "kind": "Passages from the indexed agricultural documents, with sources.",
+      "result": {
+        "answer": "Soybean is sown at the onset of the monsoon [1].",
+        "available": true,
+        "passages": [
+          {
+            "chunk_id": "soy_test.pdf#0",
+            "document": "soy_test.pdf",
+            "excerpt": "Soybean is sown at the onset of the monsoon when soil moisture is adequate. Well drained loamy soils are preferred for soybean sowing in the monsoon season.",
+            "page": 1,
+            "score": 0.53,
+            "text": "Soybean is sown at the onset of the monsoon when soil moisture is adequate. Well drained loamy soils are preferred for soybean sowing in the monsoon season.",
+            "title": "Test Document",
+            "used_in_answer": true
+          }
+        ],
+        "reason": null,
+        "source": "agricultural document index (rag/)",
+        "sources": [
+          {
+            "document": "soy_test.pdf",
+            "page": 1,
+            "passage": 1,
+            "title": "Test Document"
+          }
+        ]
+      }
+    },
+    "success": true,
+    "tool_trace": [
+      {
+        "ms": 0,
+        "note": "method=llm",
+        "ok": true,
+        "tool": "understand"
+      },
+      {
+        "ms": 0,
+        "note": null,
+        "ok": true,
+        "tool": "get_weather"
+      },
+      {
+        "ms": 817,
+        "note": null,
+        "ok": true,
+        "tool": "predict_crop"
+      },
+      {
+        "ms": 0,
+        "note": null,
+        "ok": true,
+        "tool": "estimate_yield_profit"
+      },
+      {
+        "ms": 0,
+        "note": null,
+        "ok": true,
+        "tool": "search_agri_documents"
+      }
+    ]
+  }
+}

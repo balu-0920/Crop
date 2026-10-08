@@ -846,7 +846,8 @@ function showCropResult(data){
     fertilizerTip.innerText = crop ? crop.fertilizer_tips : "No fertilizer guidance available for this crop.";
 
     // --- Overall Recommendations (Part 3 - Smart Recommendation Engine) ---
-    renderRecommendations(data.recommendations, data.recommendation_weights);
+    renderRecommendations(data.recommendations, data.recommendation_weights, data.decision_weights);
+    renderExplanation(data);
 
     // --- Prediction History (frontend-only, see saveHistoryEntry below) ---
     saveHistoryEntry(data, displayName);
@@ -857,7 +858,92 @@ function showCropResult(data){
 // gets a star rating (overall_score converted to 1-5 stars) plus its own
 // ✔/⚠/✖ "Why Recommended" badges - no separate lookup needed, the backend
 // already attached the explanation to each entry.
-function renderRecommendations(recommendations, weights){
+// Explainable AI: bars showing how much each input moved the model's
+// probability for the recommended crop (SHAP). Not a causal claim - the
+// note from the backend is always shown with it.
+function renderExplanation(data){
+    const card = document.getElementById("explainCard");
+    const explanations = data.explanations || {};
+    const topCrop = data.recommendations?.[0]?.crop_key;
+    const key = explanations[topCrop] ? topCrop : data.prediction;
+    const ex = explanations[key];
+    if(!ex){ card.classList.add("hidden"); return; }
+
+    const isShap = ex.method === "shap";
+    const maxAbs = Math.max(...ex.features.map(f => Math.abs(f.contribution)), 1e-9);
+    const rows = ex.features.map(f => {
+        const width = Math.max(2, Math.round(Math.abs(f.contribution) / maxAbs * 100));
+        const cls = !isShap ? "explain-bar-neutral" : f.contribution >= 0 ? "explain-bar-up" : "explain-bar-down";
+        const sign = isShap && f.contribution > 0 ? "+" : "";
+        const val = isShap ? `${sign}${f.contribution.toFixed(1)} pts` : `${f.contribution.toFixed(1)}%`;
+        return `<div class="explain-row">
+            <span class="explain-name">${f.label}<small>${f.value ?? ""}</small></span>
+            <span class="explain-track"><span class="explain-bar ${cls}" style="width:${width}%"></span></span>
+            <span class="explain-num">${val}</span>
+        </div>`;
+    }).join("");
+
+    const cropName = data.crop_info && key === data.prediction ? data.crop_info.name : (data.recommendations?.find(r => r.crop_key === key)?.crop || key);
+    const probLine = isShap
+        ? `Model probability for ${cropName}: ${ex.model_probability}% (base rate ${ex.base_value}% + the contributions below)`
+        : "Model-wide feature importance (not specific to this input)";
+
+    card.innerHTML = `
+        <div class="explain-head"><strong>Why the model favours ${cropName}</strong></div>
+        <p class="explain-sub">${probLine}</p>
+        ${rows}
+        <p class="decision-note">${ex.note}</p>`;
+    card.classList.remove("hidden");
+}
+
+// Formats one decision field that the backend marks as available or unavailable.
+// Unavailable fields are shown explicitly (never as 0 or a guess).
+function decisionField(field, formatter){
+    if(!field || !field.available){
+        return `<span class="decision-unavailable" title="${(field?.reason || "Unavailable").replace(/"/g, "&quot;")}">Unavailable</span>`;
+    }
+    return formatter(field);
+}
+
+const inr = n => "₹" + Number(n).toLocaleString("en-IN");
+
+function renderDecisionCard(rec, decisionWeights){
+    const card = document.getElementById("decisionCard");
+    if(!rec || !rec.decision){ card.classList.add("hidden"); return; }
+    const d = rec.decision;
+
+    const yieldHtml = decisionField(d.expected_yield, f =>
+        `${f.value} t/ha <small>(${f.range[0]}–${f.range[1]})</small>`);
+    const revenueHtml = decisionField(d.revenue, f =>
+        `${inr(f.value)}/ha <small>(${inr(f.range[0])}–${inr(f.range[1])})</small>`);
+    const profitHtml = decisionField(d.profit, f =>
+        `${inr(f.value)}/ha <small>(${inr(f.range[0])}–${inr(f.range[1])})</small>`);
+
+    const riskLevel = d.risk.level;
+    const used = Object.entries(d.components_used).map(([k, v]) => `${k} ${Math.round(v * 100)}%`).join(" · ");
+    const missing = d.components_unavailable.length
+        ? ` · not used (no data): ${d.components_unavailable.join(", ")}` : "";
+
+    card.innerHTML = `
+        <div class="decision-head">
+            <span class="decision-label">Recommended crop</span>
+            <span class="decision-crop">${cropEmoji(rec.crop)} ${rec.crop}</span>
+        </div>
+        <div class="decision-grid">
+            <div><span class="decision-key">Suitability</span><span class="decision-val">${d.suitability_pct}%</span></div>
+            <div><span class="decision-key">Expected yield</span><span class="decision-val">${yieldHtml}</span></div>
+            <div><span class="decision-key">Estimated revenue</span><span class="decision-val">${revenueHtml}</span></div>
+            <div><span class="decision-key">Estimated profit</span><span class="decision-val">${profitHtml}</span></div>
+            <div><span class="decision-key">Risk level</span><span class="decision-val"><span class="risk-pill risk-${riskLevel.toLowerCase()}">${riskLevel}</span>${d.risk.score !== null ? ` <small>(${d.risk.score}/100)</small>` : ""}</span></div>
+            <div><span class="decision-key">Final rank score</span><span class="decision-val">${d.final_score}%</span></div>
+        </div>
+        <ul class="decision-reasons">${d.main_reasons.map(r => `<li>${r}</li>`).join("")}</ul>
+        <p class="decision-note">Final score weights used: ${used}${missing}. Yield, revenue and profit stay "Unavailable" until price, cost and yield data are added (see data/economics/README.md). Estimates are not forecasts of actual farm results.</p>
+    `;
+    card.classList.remove("hidden");
+}
+
+function renderRecommendations(recommendations, weights, decisionWeights){
 
     if(!recommendations || recommendations.length === 0){
         document.getElementById("recommendationSection").classList.add("hidden");
@@ -869,6 +955,8 @@ function renderRecommendations(recommendations, weights){
     recommendationWeightsLine.innerText = weights
         ? `Score = ML ${Math.round(weights.ml * 100)}% · Regional ${Math.round(weights.regional * 100)}% · Weather ${Math.round(weights.weather * 100)}%`
         : "";
+
+    renderDecisionCard(recommendations[0], decisionWeights);
 
     recommendationsList.innerHTML = "";
 
@@ -885,12 +973,17 @@ function renderRecommendations(recommendations, weights){
             return `<span class="reason-badge ${cls}">${symbol} ${reason.text}</span>`;
         }).join("");
 
+        const riskLevel = rec.decision?.risk?.level;
+        const riskBadge = riskLevel
+            ? `<span class="risk-pill risk-${riskLevel.toLowerCase()}">${riskLevel} risk</span>` : "";
+
         li.innerHTML = `
             <div class="recommendation-row">
                 <span class="recommendation-rank">${index + 1}.</span>
                 <span class="recommendation-crop">${cropEmoji(rec.crop)} ${rec.crop}</span>
+                ${riskBadge}
                 <span class="recommendation-stars">${stars}</span>
-                <span class="recommendation-score">${rec.overall_score}%</span>
+                <span class="recommendation-score" title="Final rank score">${rec.decision?.final_score ?? rec.overall_score}%</span>
             </div>
             <div class="recommendation-reasons">${reasonBadges}</div>
         `;

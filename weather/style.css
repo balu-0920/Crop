@@ -1036,3 +1036,113 @@ input{ font-family:inherit; }
     .brand-subtitle{ display:none; }
     .search-panel{ padding:var(--space-4); }
 }
+
+
+/* =========================================================
+   DECISION CARD (yield / revenue / profit / risk)
+========================================================= */
+.decision-card{
+    background:var(--color-primary-light);
+    border:1px solid var(--color-border-strong);
+    border-radius:var(--radius-md);
+    padding:var(--space-4);
+    margin-bottom:var(--space-4);
+}
+.decision-head{ display:flex; align-items:baseline; gap:var(--space-3); flex-wrap:wrap; margin-bottom:var(--space-3); }
+.decision-label{ font-size:12px; font-weight:600; color:var(--color-text-muted); text-transform:uppercase; letter-spacing:.04em; }
+.decision-crop{ font-size:20px; font-weight:700; color:var(--color-text); }
+.decision-grid{ display:grid; grid-template-columns:repeat(auto-fit,minmax(170px,1fr)); gap:var(--space-3); margin-bottom:var(--space-3); }
+.decision-key{ display:block; font-size:11.5px; color:var(--color-text-muted); margin-bottom:2px; }
+.decision-val{ font-weight:700; font-size:14.5px; color:var(--color-text); }
+.decision-val small{ font-weight:500; color:var(--color-text-muted); font-size:11.5px; }
+.decision-unavailable{ font-weight:600; color:var(--color-text-faint); font-style:italic; cursor:help; }
+.decision-reasons{ margin:0 0 var(--space-3) 18px; font-size:13px; color:var(--color-text); }
+.decision-note{ font-size:11.5px; color:var(--color-text-faint); font-family:var(--font-mono); line-height:1.5; }
+.risk-pill{ font-size:11.5px; font-weight:700; padding:3px 9px; border-radius:999px; }
+.risk-low{ background:var(--color-secondary-light); color:var(--color-secondary); }
+.risk-medium{ background:var(--color-accent-light); color:#B45309; }
+.risk-high{ background:var(--color-danger-light); color:var(--color-danger); }
+.risk-unknown{ background:var(--color-surface-alt); color:var(--color-text-muted); }
+
+
+/* =========================================================
+   EXPLAINABLE AI (feature contribution bars)
+========================================================= */
+.explain-card{
+    background:var(--color-surface-alt);
+    border:1px solid var(--color-border);
+    border-radius:var(--radius-md);
+    padding:var(--space-4);
+    margin-bottom:var(--space-4);
+}
+.explain-head{ font-size:14px; color:var(--color-text); margin-bottom:2px; }
+.explain-sub{ font-size:12px; color:var(--color-text-muted); margin-bottom:var(--space-3); }
+.explain-row{ display:grid; grid-template-columns:130px 1fr 70px; align-items:center; gap:10px; margin-bottom:6px; font-size:12.5px; }
+.explain-name{ font-weight:600; color:var(--color-text); }
+.explain-name small{ margin-left:6px; font-weight:400; color:var(--color-text-faint); }
+.explain-track{ background:var(--color-border); border-radius:999px; height:8px; overflow:hidden; }
+.explain-bar{ display:block; height:100%; border-radius:999px; }
+.explain-bar-up{ background:var(--color-secondary); }
+.explain-bar-down{ background:var(--color-danger); }
+.explain-bar-neutral{ background:var(--color-primary); }
+.explain-num{ font-family:var(--font-mono); text-align:right; color:var(--color-text-muted); }
+@media (max-width:520px){ .explain-row{ grid-template-columns:100px 1fr 62px; } }
+
+/* =========================================================
+   AGRICULTURE ASSISTANT (assistant.html)
+========================================================= */
+.chat-panel{ display:flex; flex-direction:column; gap:var(--space-3); }
+.chat-status{ font-size:12px; color:var(--color-text-muted); font-family:var(--font-mono); }
+.chat-log{ display:flex; flex-direction:column; gap:var(--space-3); min-height:260px; max-height:60vh; overflow-y:auto; padding:var(--space-2) 0; }
+.chat-msg{ display:flex; flex-direction:column; max-width:88%; }
+.chat-user{ align-self:flex-end; }
+.chat-bot{ align-self:flex-start; }
+.chat-bubble{ padding:10px 14px; border-radius:var(--radius-md); font-size:14px; line-height:1.55; white-space:pre-wrap; }
+.chat-user .chat-bubble{ background:var(--color-primary); color:#fff; }
+.chat-bot .chat-bubble{ background:var(--color-surface-alt); border:1px solid var(--color-border); color:var(--color-text); }
+.chat-unanswerable .chat-bubble{ background:var(--color-accent-light); border-color:var(--color-accent); }
+.chat-error .chat-bubble{ background:var(--color-danger-light); border-color:var(--color-danger); }
+.chat-sources{ margin-top:6px; font-size:12px; color:var(--color-text-muted); }
+.chat-sources ul{ margin:2px 0 0 18px; }
+.chat-context{ margin-top:6px; font-size:12px; color:var(--color-text-muted); }
+.chat-context summary{ cursor:pointer; }
+.chat-context-item{ margin-top:6px; padding:8px 10px; background:var(--color-surface-alt); border:1px solid var(--color-border); border-radius:var(--radius-md); }
+.chat-context-meta{ font-family:var(--font-mono); font-size:11px; color:var(--color-text-faint); margin-bottom:2px; }
+.chat-form{ display:flex; gap:var(--space-3); }
+.chat-form input{ flex:1; padding:12px 14px; border:1px solid var(--color-border-strong); border-radius:var(--radius-md); font:inherit; font-size:14px; }
+
+/* =========================================================
+   FARM DECISION AGENT (agent.html)
+========================================================= */
+.agent-form{ display:grid; grid-template-columns:1fr 1fr; gap:var(--space-3); }
+.agent-wide{ grid-column:1 / -1; }
+.agent-field{ display:flex; flex-direction:column; gap:4px; font-size:12px; font-weight:600; color:var(--color-text-muted); }
+.agent-field input, .agent-field select, .agent-field textarea{
+    padding:10px 12px; border:1px solid var(--color-border-strong); border-radius:var(--radius-md);
+    font:inherit; font-size:14px; font-weight:400; color:var(--color-text); background:var(--color-surface);
+}
+.agent-soil{ display:grid; grid-template-columns:repeat(4,1fr); gap:var(--space-3); }
+.agent-soil-title{ grid-column:1 / -1; font-size:12px; color:var(--color-text-muted); }
+#agResult{ display:flex; flex-direction:column; gap:var(--space-4); }
+.agent-answer{ border-left:3px solid var(--color-primary); }
+.agent-verdict{ display:inline-block; padding:4px 12px; border-radius:999px; font-weight:700; font-size:13px; margin-bottom:var(--space-3); }
+.verdict-recommended{ background:var(--color-secondary-light); color:var(--color-secondary); }
+.verdict-conditional{ background:var(--color-accent-light); color:#B45309; }
+.verdict-not_recommended{ background:var(--color-danger-light); color:var(--color-danger); }
+.verdict-insufficient_evidence{ background:var(--color-surface-alt); color:var(--color-text-muted); border:1px solid var(--color-border-strong); }
+.agent-summary{ font-size:15px; line-height:1.6; margin-bottom:var(--space-3); }
+.agent-points{ margin:0 0 var(--space-3) 18px; font-size:14px; line-height:1.6; }
+.agent-chip{ display:inline-block; font-family:var(--font-mono); font-size:10.5px; padding:1px 6px; margin-left:3px; border-radius:6px; background:var(--color-primary-light); color:var(--color-primary); cursor:help; }
+.agent-caveat{ font-size:13px; color:#B45309; margin-bottom:6px; }
+.agent-missing{ background:var(--color-accent-light); border:1px solid var(--color-accent); border-radius:var(--radius-md); padding:10px 14px; font-size:13px; margin:var(--space-3) 0; }
+.agent-missing ul{ margin:4px 0 0 18px; }
+.agent-note{ font-size:11.5px; color:var(--color-text-faint); font-family:var(--font-mono); }
+.agent-section{ background:var(--color-surface); border:1px solid var(--color-border); border-radius:var(--radius-md); padding:var(--space-3) var(--space-4); }
+.agent-section summary{ cursor:pointer; font-weight:700; font-size:14px; }
+.agent-kind{ font-size:12px; color:var(--color-text-muted); margin:4px 0 var(--space-3); }
+.agent-facts{ list-style:none; display:flex; flex-direction:column; gap:6px; font-size:13px; }
+.agent-fid{ font-family:var(--font-mono); font-size:10.5px; color:var(--color-text-faint); margin-right:6px; }
+.agent-empty{ font-size:13px; color:var(--color-text-faint); font-style:italic; }
+.agent-trace{ font-family:var(--font-mono); font-size:11.5px; color:var(--color-text-faint); }
+@media (max-width:620px){ .agent-form{ grid-template-columns:1fr; } .agent-soil{ grid-template-columns:1fr 1fr; } }
+.agent-field input, .agent-field select, .agent-field textarea{ width:100%; min-width:0; box-sizing:border-box; }
