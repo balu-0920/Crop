@@ -1,4 +1,11 @@
 .env
-cache/
+venv/
 __pycache__/
+*.pyc
+
+cache/
 rag/index/
+
+.ipynb_checkpoints/
+
+.DS_Store
