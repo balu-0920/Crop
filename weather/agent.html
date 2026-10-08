@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Farm Decision Agent</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="app-shell">
+
+    <header class="topbar">
+        <div class="topbar-brand">
+            <span class="brand-mark"><i class="fa-solid fa-diagram-project"></i></span>
+            <div class="brand-copy">
+                <h1 class="brand-title">Farm Decision Agent</h1>
+                <p class="brand-subtitle">Ask a farming question. The agent gathers weather, the ML crop recommendation, yield/profit/risk data and document knowledge, then explains its advice and what it is based on.</p>
+            </div>
+        </div>
+        <div class="topbar-meta">
+            <a class="topbar-pill" href="index.html" style="text-decoration:none"><i class="fa-solid fa-seedling"></i> Crop Recommendation</a>
+            <a class="topbar-pill" href="assistant.html" style="text-decoration:none"><i class="fa-solid fa-book-open"></i> Documents Q&amp;A</a>
+        </div>
+    </header>
+
+    <form id="agentForm" class="panel agent-form">
+        <label class="agent-field agent-wide">Your question
+            <textarea id="agQuestion" rows="2" maxlength="1000" required
+                placeholder="e.g. Should I grow soybean in my farm this season?"></textarea>
+        </label>
+        <label class="agent-field">Location (needed for weather)
+            <input id="agLocation" type="text" maxlength="100" placeholder="e.g. Hyderabad, IN">
+        </label>
+        <label class="agent-field">Season (optional)
+            <select id="agSeason"><option value="">Auto (from date)</option><option>Kharif</option><option>Rabi</option><option>Zaid</option></select>
+        </label>
+        <div class="agent-soil agent-wide">
+            <span class="agent-soil-title">Soil test values (needed for the ML model; leave blank if unknown)</span>
+            <label class="agent-field">N (kg/ha)<input id="agN" type="number" min="0" step="any"></label>
+            <label class="agent-field">P (kg/ha)<input id="agP" type="number" min="0" step="any"></label>
+            <label class="agent-field">K (kg/ha)<input id="agK" type="number" min="0" step="any"></label>
+            <label class="agent-field">Soil pH<input id="agPh" type="number" min="0" max="14" step="any"></label>
+        </div>
+        <button id="agSubmit" type="submit" class="search-btn agent-wide"><i class="fas fa-paper-plane"></i><span>Get advice</span></button>
+    </form>
+
+    <div id="agStatus" class="chat-status"></div>
+    <div id="agResult"></div>
+
+</div>
+<script src="agent.js"></script>
+</body>
+</html>

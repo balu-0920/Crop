@@ -75,6 +75,10 @@ app = Flask(__name__)
 from rag.api import bp as agriculture_rag_bp
 app.register_blueprint(agriculture_rag_bp)
 
+# LangGraph decision agent (POST /api/agent/advice). Configured below, once predict_core exists.
+from agent.api import bp as agent_bp, configure_agent
+app.register_blueprint(agent_bp)
+
 
 def get_top_predictions(input_scaled, top_n=3):
     if not hasattr(model, "predict_proba"):
@@ -198,13 +202,22 @@ def region():
 
 @app.route("/predict", methods=["POST"])
 def predict():
+    body, status = predict_core(request.get_json(silent=True))
+    return jsonify(body), status
+
+
+def predict_core(data):
+    """
+    The whole /predict pipeline as a plain function: takes the parsed JSON dict and returns
+    (response_dict, http_status). The route above only wraps it in jsonify; the agent
+    (agent/tools.py) calls it directly, so there is exactly one prediction implementation.
+    """
    
-    data = request.get_json(silent=True)
 
     debug_log("Incoming JSON", data)
 
     if data is None:
-        return jsonify({
+        return ({
             "success": False,
             "message": "Request body must be valid JSON."
         }), 400  # 400 Bad Request: the client sent something we can't process
@@ -212,7 +225,7 @@ def predict():
    
     for field in feature_names:
         if field not in data:
-            return jsonify({
+            return ({
                 "success": False,
                 "message": f"Missing field: {field}"
             }), 400
@@ -221,7 +234,7 @@ def predict():
     for field in feature_names:
         value = data[field]
         if not isinstance(value, (int, float)):
-            return jsonify({
+            return ({
                 "success": False,
                 "message": f"Field '{field}' must be a number, got: {type(value).__name__}"
             }), 400
@@ -322,7 +335,7 @@ def predict():
         except Exception as exc:
             debug_log("Explanation failed", repr(exc))
 
-        return jsonify({
+        return ({
             "success": True,
             "prediction": predicted_crop,
             "explanations": explanations,  # {crop_key: {method, base_value, features[...], note}}
@@ -352,16 +365,19 @@ def predict():
                 "soil": context["soil"],
                 "seasonal_climate": context["seasonal_climate"],
             },
-        })  # no explicit status code -> Flask defaults to 200 OK
+        }), 200
 
     except Exception as exc:
       
         debug_log("Prediction pipeline raised an exception", repr(exc))
-        return jsonify({
+        return ({
             "success": False,
             "message": "Prediction failed unexpectedly. Please try again."
         }), 500
 
+
+
+configure_agent(predict_core, crop_info)
 
 
 if __name__ == "__main__":

@@ -11,3 +11,4 @@ shap
 pypdf
 fastembed
 anthropic
+langgraph

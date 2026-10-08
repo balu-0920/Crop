@@ -358,3 +358,31 @@ Question -> embed -> top-5 cosine matches -> drop chunks below RAG_MIN_SCORE -> 
 - **Tuning:** `RAG_MIN_SCORE` (default 0.45) is a similarity floor that depends on the embedding model; check it against your own documents. The assistant is single-turn (no chat memory).
 
 Endpoints: `POST /api/agriculture/ask` `{"question": "..."}` -> `{success, question, answer, answerable, sources[{document,title,page,passage}], retrieved_context[{document,page,score,excerpt,used_in_answer,...}]}`; `GET /api/agriculture/status`. UI: `weather/assistant.html` (linked from the top bar). Tests: `tests/test_rag.py` (uses a hashing embedder and stub LLM so it runs offline).
+
+## Phase 14 summary - LangGraph decision agent (`POST /api/agent/advice`)
+
+A small, single-pass LangGraph agent that answers questions like *"Should I grow soybean in my farm this season?"* by calling the existing systems as tools. It adds no new ML, scoring or RAG logic; `app.py`'s prediction code was moved into a function `predict_core(data)` (the `/predict` route now just wraps it - responses verified byte-identical before/after).
+
+```
+understand --> [get_weather] --> [predict_crop] --> [estimate_yield_profit] --> [search_agri_documents] --> synthesize
+(LLM: crop + search query)   brackets = skipped by conditional edges when not needed or inputs are missing     (LLM: advice JSON)
+```
+The graph is a DAG (each node's edges only point forward - checked by a test), so there are no loops and no autonomous retries. Exactly four tools:
+
+| Tool | Wraps | Notes |
+|---|---|---|
+| `get_weather` | OpenWeatherMap current + forecast (`OPENWEATHER_API_KEY` in `.env`) | next-24h rain = sum of the first 8 three-hour slots (same as `main.js`); 10-minute cache; if the forecast fails, rainfall is *unavailable*, never estimated |
+| `predict_crop` | `predict_core` (ML model + recommendation + decision layer + SHAP) | needs weather and your soil N/P/K/pH |
+| `estimate_yield_profit` | `economics.py` + `risk.py` | uses your price/cost/yield CSVs; unavailable fields stay unavailable |
+| `search_agri_documents` | the RAG pipeline (`rag/`) | returns grounded answer + passages + sources |
+
+### How the numbers are protected
+1. Tool outputs become labelled **facts** (`F1..`) and retrieved **passages** (`D1..`); that is all the writing LLM sees, and it is told to copy numbers verbatim, never compute or estimate them, and to say "unavailable" for missing values.
+2. Every reasoning point must cite evidence ids. **Numeric guard (`agent/facts.py`):** any number in a point must appear in the evidence *that point cites*; any number in the summary/caveats must appear in some evidence. Offending statements are removed and listed in `final_reasoning.numeric_check`. Strict: rounding is not allowed.
+3. A deterministic rule forces `insufficient_evidence` if no tool or document produced evidence about the asked crop.
+Limits: the guard checks digits only (not numbers written as words), and cannot detect a real number attached to the wrong quantity; the wording of the advice is still LLM output and can be wrong.
+
+### Response sections (kept separate on purpose)
+`model_prediction` (ML + scoring estimates) - `external_data` (weather service, your price/cost/yield data, rule-based risk) - `retrieved_knowledge` (document passages with sources) - `final_reasoning` (AI-written, validated) - plus `evidence`, `missing_information`, `tool_trace`. Request: `{"question", "location" or "lat"+"lon", "soil": {"N","P","K","ph"}, "season"?}`; missing location/soil are reported in `missing_information` and those tools are skipped. 503 (no `ANTHROPIC_API_KEY`) still returns the collected evidence.
+
+Soybean is not one of the ML model's 22 crops, so the agent will say the ML model gives no suitability for it, and until you add economics data and documents it will typically answer "not enough evidence" - by design. See `agent/example_request_response.json` (generated with test doubles - see its `_note`). UI: `weather/agent.html`. Tests: `tests/test_agent.py`.
